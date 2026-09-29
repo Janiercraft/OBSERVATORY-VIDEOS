@@ -1202,14 +1202,24 @@
             barra.hidden = false;
             barra.value = 0;
             try {
-                const resultado = await upload(`bitacora/${tipo}.${extension}`, archivo, {
-                    access: 'public',
-                    handleUploadUrl: '/api/subida',
-                    multipart: true,
-                    clientPayload: tipo,
-                    contentType: archivo.type,
-                    onUploadProgress: (avance) => { barra.value = Math.round(avance.percentage); },
-                });
+                // No forzamos multipart: en algunos despliegues de Vercel el endpoint /api/blob/mpu
+                // puede responder 400/CORS. La subida sigue siendo directa navegador -> Blob y no pasa
+                // por el límite de 4.5 MB de las Functions.
+                const controlador = new AbortController();
+                const temporizador = setTimeout(() => controlador.abort(), 120000);
+                let resultado;
+                try {
+                    resultado = await upload(`bitacora/${tipo}.${extension}`, archivo, {
+                        access: 'public',
+                        handleUploadUrl: '/api/subida',
+                        clientPayload: tipo,
+                        contentType: archivo.type,
+                        abortSignal: controlador.signal,
+                        onUploadProgress: (avance) => { barra.value = Math.round(avance.percentage); },
+                    });
+                } finally {
+                    clearTimeout(temporizador);
+                }
                 return resultado.url;
             } catch (error) {
                 const mensaje = String(error && error.message || '');
@@ -1218,7 +1228,8 @@
                 if (/401|sesión/i.test(mensaje)) { location.replace('./'); throw new Error('Tu sesión terminó.'); }
                 console.error('Error real de Vercel Blob:', error);
                 if (/token|permission|access denied|forbidden|403/i.test(mensaje)) throw new Error('Vercel Blob rechazó la autorización de subida. Revisa la conexión del Blob Store con este proyecto y vuelve a desplegar.');
-                if (/failed to fetch|network|fetch/i.test(mensaje)) throw new Error('No fue posible comunicar el navegador con Vercel Blob. Revisa la consola del navegador y vuelve a intentarlo.');
+                if (/abort|aborted/i.test(mensaje)) throw new Error('La subida tardó demasiado y fue cancelada. Inténtalo de nuevo o usa un archivo más pequeño.');
+                if (/failed to fetch|network|fetch|cors/i.test(mensaje)) throw new Error('Vercel Blob rechazó la conexión de subida. Se desactivó el modo multipart para evitar el error CORS; si vuelve a aparecer, revisa que el Blob Store sea público.');
                 throw new Error(`No se pudo subir el archivo${mensaje ? ': ' + mensaje : '.'}`);
             } finally {
                 barra.hidden = true;
