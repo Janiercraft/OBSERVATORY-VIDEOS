@@ -1,0 +1,16 @@
+{
+  "name": "observatorio-estelar",
+  "private": true,
+  "type": "module",
+  "description": "Observatorio Estelar UNAD | CIP Turbo - versión para Vercel",
+  "scripts": {
+    "preparar": "node preparar.mjs"
+  },
+  "dependencies": {
+    "@upstash/redis": "^1.35.0",
+    "@vercel/blob": "^2.0.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  }
+}

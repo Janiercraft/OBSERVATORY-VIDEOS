@@ -1,0 +1,2070 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Observatorio Estelar UNAD | CIP TURBO</title>
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <style>
+        /* ESTILOS GENERALES */
+        body { background-color: #05060a; color: white; margin: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        /* Cielo estrellado animado: canvas fijo detrás de todo el contenido */
+        #cielo-estrellado { position: fixed; inset: 0; width: 100%; height: 100%; z-index: -1; display: block; background: radial-gradient(ellipse at 20% 10%, #131a2e 0%, #070912 45%, #030407 100%); }
+        .navbar { display: flex; align-items: center; padding: 15px 30px; background-color: rgba(31, 40, 51, 0.8); border-bottom: 2px solid #e5b340; backdrop-filter: blur(6px); position: sticky; top: 0; z-index: 50; }
+        /* Logo real recortado al emblema circular; al hacer clic se abre completo */
+        .logo-circulo { width: 70px; height: 70px; border-radius: 50%; background-image: url('logo.jpg'); background-size: 136% auto; background-position: center; background-repeat: no-repeat; border: 2px solid #e5b340; margin-right: 20px; box-shadow: 0 0 15px rgba(229, 179, 64, 0.4); cursor: pointer; padding: 0; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        .logo-circulo:hover, .logo-circulo:focus-visible { transform: scale(1.08) rotate(-4deg); box-shadow: 0 0 25px rgba(229, 179, 64, 0.8); outline: none; }
+        .navbar h1 { font-size: 1.5rem; color: #c5c6c7; margin: 0; }
+        /* Botón para ver la página en pantalla completa (presentaciones) */
+        .btn-pantalla { margin-left: auto; background: transparent; color: #66fcf1; border: 1px solid #66fcf1; padding: 8px 16px; border-radius: 25px; cursor: pointer; font-size: 0.95rem; font-weight: bold; transition: background 0.2s ease, color 0.2s ease; }
+        .btn-pantalla:hover, .btn-pantalla:focus-visible { background: #66fcf1; color: #0b0c10; outline: none; }
+        html { scroll-behavior: smooth; }
+        /* Portada: ocupa la pantalla completa bajo la barra, como la entrada de un sitio web */
+        .hero-section { text-align: center; padding: 60px 20px; min-height: calc(100vh - 104px); box-sizing: border-box; display: flex; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at 50% 45%, rgba(31, 40, 51, 0.6) 0%, rgba(11, 12, 16, 0) 60%); }
+        .hero-emblema { width: 170px; height: 170px; border-radius: 50%; background: url('logo.jpg') center / 136% auto no-repeat; border: 3px solid #e5b340; box-shadow: 0 0 0 8px rgba(229, 179, 64, 0.12), 0 0 60px rgba(229, 179, 64, 0.35); margin-bottom: 26px; }
+        .titulo-principal { font-size: clamp(2.3rem, 6vw, 5.2rem); letter-spacing: 0.04em; color: #66fcf1; text-shadow: 0 0 20px rgba(102, 252, 241, 0.5); margin: 0 0 14px 0; line-height: 1.05; }
+        .hero-lema { font-size: clamp(1rem, 1.6vw, 1.35rem); color: #c5c6c7; margin: 0 0 34px 0; max-width: 60ch; }
+        .hero-acciones { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+        .hero-acciones a { text-decoration: none; font-weight: bold; padding: 13px 26px; border-radius: 30px; font-size: 1.05rem; transition: background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease; }
+        .accion-principal { background: #66fcf1; color: #0b0c10; box-shadow: 0 0 24px rgba(102, 252, 241, 0.35); }
+        .accion-principal:hover, .accion-principal:focus-visible { box-shadow: 0 0 36px rgba(102, 252, 241, 0.6); outline: none; }
+        .accion-secundaria { color: #e5b340; border: 1px solid #e5b340; }
+        .accion-secundaria:hover, .accion-secundaria:focus-visible { background: #e5b340; color: #0b0c10; outline: none; }
+        /* Menú de navegación del sitio */
+        .menu-sitio { display: flex; gap: 4px; margin-left: 40px; list-style: none; padding: 0; }
+        .menu-sitio a { color: #c5c6c7; text-decoration: none; padding: 8px 14px; border-radius: 20px; font-size: 0.98rem; transition: color 0.2s ease, background 0.2s ease; }
+        .menu-sitio a:hover, .menu-sitio a:focus-visible { color: #fff; background: rgba(102, 252, 241, 0.12); outline: none; }
+        /* Pie de página */
+        .pie-sitio { border-top: 1px solid rgba(229, 179, 64, 0.35); background: rgba(10, 12, 18, 0.9); padding: 36px 20px; }
+        .pie-contenido { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; gap: 22px; flex-wrap: wrap; justify-content: space-between; color: #8b95a1; font-size: 0.92rem; }
+        .pie-marca { display: flex; align-items: center; gap: 14px; }
+        .pie-marca span.pie-logo { width: 48px; height: 48px; border-radius: 50%; background: url('logo.jpg') center / 136% auto no-repeat; border: 2px solid #e5b340; flex-shrink: 0; }
+        .pie-marca strong { color: #fff; display: block; font-size: 1rem; }
+        .pie-sitio a { color: #66fcf1; text-decoration: none; }
+        .pie-sitio a:hover { text-decoration: underline; }
+        .comienzo-section { background-color: rgba(18, 21, 28, 0.55); padding: 50px 20px; text-align: center; backdrop-filter: blur(2px); }
+        
+        .explicacion-container { display: flex; justify-content: center; align-items: center; gap: 40px; flex-wrap: wrap; max-width: 900px; margin: 0 auto; }
+        .animacion-telescopio { width: 150px; height: 150px; }
+        .tube, .lens { transform-origin: 50px 55px; animation: explorar 6s infinite alternate ease-in-out; }
+        @keyframes explorar { 0% { transform: rotate(-10deg); } 50% { transform: rotate(-45deg); } 100% { transform: rotate(-5deg); } }
+        .texto-explicacion { max-width: 400px; text-align: left; font-size: 1.1rem; color: #c5c6c7; }
+        /* Las secciones no quedan tapadas por la barra superior fija al navegar */
+        section { scroll-margin-top: 110px; }
+        .pista-observar { color: #c5c6c7; font-size: 0.95rem; margin: 5px 0 0 0; }
+        .pista-observar strong { color: #66fcf1; }
+
+        /* ===================== TELESCOPIO 3D (CSS puro, funciona sin internet) ===================== */
+        .telescopio3d-section { padding: 60px 20px; }
+        .telescopio3d-contenido { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 40px; align-items: center; }
+        .telescopio3d-section h2 { color: #e5b340; font-size: 2.2rem; margin: 0 0 12px 0; }
+        .telescopio3d-intro { color: #c5c6c7; font-size: 1.05rem; line-height: 1.6; margin: 0 0 20px 0; max-width: 60ch; }
+        .escenario3d { position: relative; height: 480px; perspective: 1100px; cursor: grab; touch-action: pan-y; border-radius: 50%; background: radial-gradient(circle at 50% 55%, rgba(102, 252, 241, 0.10) 0%, rgba(102, 252, 241, 0) 60%); outline: none; }
+        .escenario3d:active { cursor: grabbing; }
+        .escenario3d:focus-visible { box-shadow: 0 0 0 2px #66fcf1; }
+        /* Origen del modelo: punto de apoyo de la montura */
+        .modelo3d { position: absolute; left: 50%; top: 42%; width: 0; height: 0; transform-style: preserve-3d; transform: scale(var(--escala3d, 1)) rotateX(-12deg) rotateY(var(--giro, 30deg)); }
+        .modelo3d div { position: absolute; transform-style: preserve-3d; }
+        .modelo3d .cara, .modelo3d .tapa { backface-visibility: visible; transition: box-shadow 0.3s ease; }
+        .modelo3d .tapa { border-radius: 50%; }
+        /* Resalta la pieza elegida en la lista de partes */
+        .modelo3d .resaltado .cara, .modelo3d .resaltado .tapa, .modelo3d .resaltado.tapa { box-shadow: inset 0 0 0 200px rgba(102, 252, 241, 0.45); }
+        .sombra-suelo { position: absolute; left: 50%; top: 88%; width: 320px; height: 60px; margin-left: -160px; border-radius: 50%; background: radial-gradient(ellipse, rgba(0, 0, 0, 0.6) 0%, rgba(0, 0, 0, 0) 70%); }
+        .pista-giro { position: absolute; bottom: 6px; left: 0; right: 0; text-align: center; color: #8b95a1; font-size: 0.85rem; margin: 0; pointer-events: none; }
+        .lista-partes { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 18px 0; padding: 0; list-style: none; }
+        .lista-partes button { background: rgba(31, 40, 51, 0.85); color: #c5c6c7; border: 1px solid #2e3b4a; padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.95rem; transition: border-color 0.2s ease, color 0.2s ease; }
+        .lista-partes button:hover, .lista-partes button:focus-visible { border-color: #66fcf1; color: #fff; outline: none; }
+        .lista-partes button[aria-pressed="true"] { background: #66fcf1; color: #0b0c10; border-color: #66fcf1; font-weight: bold; }
+        .detalle-parte { background: rgba(31, 40, 51, 0.85); border-left: 4px solid #e5b340; border-radius: 0 12px 12px 0; padding: 18px 22px; min-height: 120px; }
+        .detalle-parte h3 { margin: 0 0 8px 0; color: #fff; font-size: 1.3rem; }
+        .detalle-parte p { margin: 0; color: #c5c6c7; line-height: 1.6; }
+
+        /* ===================== CONSTELACIÓN DEL EQUIPO ===================== */
+        .equipo-section { padding: 60px 20px 90px 20px; text-align: center; }
+        .equipo-section h2 { font-size: 2.2rem; margin-bottom: 6px; }
+        .leyenda-roles { display: flex; flex-wrap: wrap; justify-content: center; gap: 18px; margin: 18px 0 10px 0; padding: 0; list-style: none; color: #c5c6c7; font-size: 0.9rem; }
+        .leyenda-roles li::before { content: ''; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 7px; background: var(--color-rol); box-shadow: 0 0 8px var(--color-rol); vertical-align: middle; }
+        .constelacion { position: relative; max-width: 1000px; aspect-ratio: 1000 / 620; margin: 30px auto 0 auto; }
+        .lineas-constelacion { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+        .lineas-constelacion line { stroke: rgba(197, 198, 199, 0.45); stroke-width: 1.5; stroke-dasharray: 6 6; }
+        .lineas-constelacion circle { fill: #fff; }
+        /* Color del anillo según el rol: la leyenda explica el código */
+        .nodo-integrante { --color-rol: #45a29e; position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -52px); display: flex; flex-direction: column; align-items: center; background: none; border: none; color: #fff; cursor: pointer; padding: 0; font-family: inherit; width: 170px; }
+        .nodo-director { --color-rol: #a66bff; }
+        .nodo-lider { --color-rol: #e5b340; }
+        .nodo-creador { --color-rol: #66fcf1; }
+        .nodo-investigador { --color-rol: #45a29e; }
+        .icono-integrante { width: 104px; height: 104px; border-radius: 50%; overflow: hidden; border: 3px solid var(--color-rol); box-shadow: 0 0 0 5px rgba(5, 6, 10, 0.9), 0 0 24px var(--color-rol); background: #0b0c10; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+        /* Recorte al rostro: excluye el cartel impreso en la imagen original */
+        .icono-integrante img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 8%; transform: scale(1.45); transform-origin: 50% 22%; display: block; }
+        .nodo-integrante:hover .icono-integrante, .nodo-integrante:focus-visible .icono-integrante { transform: scale(1.1); box-shadow: 0 0 0 5px rgba(5, 6, 10, 0.9), 0 0 40px var(--color-rol); }
+        .nodo-integrante:focus-visible { outline: none; }
+        .nodo-integrante:focus-visible .nodo-nombre { text-decoration: underline; }
+        /* Fondo detrás del texto para que las líneas de la constelación no lo crucen */
+        .nodo-nombre, .nodo-rol { background: rgba(5, 6, 10, 0.78); padding: 1px 8px; border-radius: 6px; }
+        .nodo-nombre { margin-top: 10px; font-size: 1.1rem; font-weight: bold; text-shadow: 0 2px 6px #000; }
+        .nodo-rol { font-size: 0.85rem; color: var(--color-rol); font-weight: bold; text-shadow: 0 2px 6px #000; }
+        /* Aparición orquestada: las líneas se trazan y luego aparecen los integrantes */
+        .constelacion.preparada line { stroke-dashoffset: 400; stroke-dasharray: 400; }
+        .constelacion.preparada .nodo-integrante { opacity: 0; }
+        .constelacion.visible line { stroke-dasharray: 400; stroke-dashoffset: 0; transition: stroke-dashoffset 1.6s ease-out; }
+        .constelacion.visible .nodo-integrante { opacity: 1; transition: opacity 0.6s ease calc(var(--orden) * 0.12s + 0.4s); }
+
+        /* ===================== CIELO PROFUNDO (colores intercambiables) ===================== */
+        @property --c1 { syntax: '<color>'; inherits: true; initial-value: #ff4fa3; }
+        @property --c2 { syntax: '<color>'; inherits: true; initial-value: #7b3ff2; }
+        @property --c3 { syntax: '<color>'; inherits: true; initial-value: #2bb6ff; }
+        .cielo-profundo { position: relative; overflow: hidden; min-height: 620px; display: flex; align-items: center; padding: 60px 20px 180px 20px; box-sizing: border-box; background: #03040a; transition: --c1 1.2s ease, --c2 1.2s ease, --c3 1.2s ease; border-top: 1px solid rgba(255, 255, 255, 0.06); }
+        .nebulosa { position: absolute; inset: -10%; pointer-events: none; background:
+            radial-gradient(ellipse 38% 30% at 68% 38%, color-mix(in srgb, var(--c1) 75%, transparent) 0%, transparent 70%),
+            radial-gradient(ellipse 45% 35% at 78% 55%, color-mix(in srgb, var(--c2) 70%, transparent) 0%, transparent 72%),
+            radial-gradient(ellipse 30% 45% at 55% 30%, color-mix(in srgb, var(--c3) 55%, transparent) 0%, transparent 70%),
+            radial-gradient(ellipse 60% 40% at 20% 80%, color-mix(in srgb, var(--c2) 35%, transparent) 0%, transparent 70%);
+            filter: blur(30px); animation: respirar 18s ease-in-out infinite alternate; }
+        @keyframes respirar { from { transform: scale(1) rotate(0deg); } to { transform: scale(1.08) rotate(3deg); } }
+        /* Estrellas brillantes con destellos en cruz */
+        .astro { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #fff; box-shadow: 0 0 10px 3px color-mix(in srgb, var(--c3) 70%, #fff); }
+        .astro::before, .astro::after { content: ''; position: absolute; left: 50%; top: 50%; background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.85), transparent); }
+        .astro::before { width: 40px; height: 1px; transform: translate(-50%, -50%); }
+        .astro::after { width: 1px; height: 40px; transform: translate(-50%, -50%); background: linear-gradient(0deg, transparent, rgba(255, 255, 255, 0.85), transparent); }
+        .astro.grande { width: 6px; height: 6px; }
+        .astro.grande::before { width: 70px; }
+        .astro.grande::after { height: 70px; }
+        .horizonte-turbo { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 200px; pointer-events: none; }
+        .panel-cielo { position: relative; z-index: 1; max-width: 460px; background: rgba(5, 6, 14, 0.62); backdrop-filter: blur(6px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 16px; padding: 28px; margin-left: max(0px, calc((100% - 1100px) / 2)); }
+        .panel-cielo h2 { margin: 0 0 6px 0; font-size: 2.2rem; color: #fff; }
+        .panel-cielo .subtitulo-cielo { margin: 0 0 18px 0; color: #c5c6c7; }
+        .temas-cielo { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .temas-cielo button { display: flex; align-items: center; gap: 8px; background: rgba(255, 255, 255, 0.06); color: #e6e6e6; border: 1px solid rgba(255, 255, 255, 0.18); padding: 8px 14px; border-radius: 20px; cursor: pointer; font-size: 0.92rem; transition: border-color 0.2s ease; }
+        .temas-cielo button:hover, .temas-cielo button:focus-visible { border-color: #fff; outline: none; }
+        .temas-cielo button[aria-pressed="true"] { background: #fff; color: #05060a; font-weight: bold; }
+        .muestra-color { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+        /* Miniatura de la foto real dentro de cada botón, con anillo del color del objeto */
+        .miniatura-objeto { width: 30px; height: 30px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid var(--anillo); margin-left: -6px; }
+        .foto-real { margin: 0 0 16px 0; border-radius: 12px; overflow: hidden; border: 1px solid rgba(255, 255, 255, 0.15); background: #000; }
+        .foto-real img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; transition: opacity 0.4s ease; }
+        .foto-real img.cambiando { opacity: 0; }
+        .foto-real figcaption { font-size: 0.78rem; color: #aab2bd; padding: 7px 10px; background: rgba(0, 0, 0, 0.55); }
+        .foto-real figcaption a { color: #cfd8e3; }
+        .objeto-cielo h3 { margin: 0 0 8px 0; font-size: 1.4rem; color: color-mix(in srgb, var(--c3) 45%, #fff); }
+        .objeto-cielo p { margin: 0 0 10px 0; color: #d7d9dc; line-height: 1.6; }
+        .objeto-cielo .cuando-verlo { color: #fff; font-size: 0.95rem; }
+        .objeto-cielo .cuando-verlo strong { color: color-mix(in srgb, var(--c1) 55%, #fff); }
+        /* Figura ilustrada de cada objeto: solo la elegida se ve; al cambiar se desvanece y la nueva se traza */
+        .figura-cielo { position: absolute; right: max(20px, calc((100% - 1100px) / 2)); top: 50%; transform: translateY(-58%); width: min(540px, 46vw); height: auto; overflow: visible; pointer-events: none; }
+        .figura-cielo .figura { opacity: 0; transform: scale(0.9); transform-origin: 250px 250px; transition: opacity 0.8s ease, transform 1s ease; }
+        .figura-cielo .figura.activa { opacity: 1; transform: scale(1); }
+        .figura-cielo .trazo { fill: none; stroke: rgba(255, 255, 255, 0.55); stroke-width: 1.5; stroke-dasharray: 600; stroke-dashoffset: 600; transition: stroke-dashoffset 1.4s ease 0.3s; }
+        .figura-cielo .figura.activa .trazo { stroke-dashoffset: 0; }
+        .figura-cielo .etiqueta-fig { fill: #fff; font-size: 14px; font-family: 'Segoe UI', Tahoma, sans-serif; paint-order: stroke; stroke: rgba(0, 0, 0, 0.85); stroke-width: 3px; stroke-linejoin: round; opacity: 0; transition: opacity 0.6s ease 1s; }
+        .figura-cielo .figura.activa .etiqueta-fig { opacity: 0.95; }
+        .figura-cielo .destello line { stroke: rgba(255, 255, 255, 0.75); stroke-width: 1; }
+        .animacion-telescopio { cursor: pointer; border-radius: 50%; transition: filter 0.3s ease; background: none; border: none; padding: 0; }
+        .animacion-telescopio:hover, .animacion-telescopio:focus-visible { filter: drop-shadow(0 0 12px rgba(229, 179, 64, 0.7)); outline: none; }
+
+        .bitacora-section { background-color: rgba(18, 21, 28, 0.55); padding: 60px 20px 70px 20px; text-align: center; border-top: 2px dashed #45a29e; }
+        .bitacora-section h2 { font-size: 2.2rem; margin-bottom: 6px; }
+        /* Escritorio: formulario fijo a la izquierda y galería amplia a la derecha */
+        .bitacora-contenido { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 380px minmax(0, 1fr); gap: 30px; align-items: start; text-align: left; }
+        .form-multimedia { background: #1f2833; padding: 20px; border-radius: 10px; display: flex; flex-direction: column; gap: 10px; position: sticky; top: 124px; }
+        .form-multimedia input, .form-multimedia select { padding: 10px; border-radius: 5px; border: 1px solid #45a29e; background: #0b0c10; color: white; }
+        .form-multimedia button { background: #66fcf1; color: #0b0c10; border: none; padding: 10px; font-weight: bold; cursor: pointer; border-radius: 5px; }
+        .galeria-bitacora { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px; }
+        .item-media { background: #1f2833; padding: 10px; border-radius: 10px; }
+        .item-media img, .item-media video, .item-media iframe { width: 100%; height: 200px; object-fit: cover; border-radius: 5px; background: #000; }
+        /* Bitácora compartida: estado, ayudas y mensajes */
+        .modo-bitacora { max-width: 600px; margin: 0 auto 16px auto; padding: 10px 14px; border-radius: 8px; font-size: 0.92rem; background: rgba(31, 40, 51, 0.8); border: 1px solid #2e3b4a; color: #c5c6c7; }
+        .modo-bitacora.nube { border-color: #45a29e; color: #dffaf7; }
+        .form-multimedia { text-align: left; min-width: 0; }
+        /* Los campos no deben sobresalir del formulario en pantallas angostas */
+        .form-multimedia input, .form-multimedia select { box-sizing: border-box; width: 100%; min-width: 0; }
+        .form-multimedia > div { display: flex; flex-direction: column; gap: 6px; }
+        .form-multimedia > div[hidden] { display: none; }
+        .etiqueta-campo { font-size: 0.85rem; color: #c5c6c7; font-weight: bold; }
+        .ayuda-campo { color: #8b95a1; font-size: 0.8rem; }
+        .form-multimedia input[type="file"] { cursor: pointer; }
+        .form-multimedia button:disabled { opacity: 0.6; cursor: wait; }
+        #progreso-subida { width: 100%; height: 10px; accent-color: #66fcf1; }
+        .estado-bitacora { margin: 0; min-height: 1.2em; font-size: 0.9rem; color: #c5c6c7; }
+        .estado-bitacora.error { color: #ff8a80; }
+        .estado-bitacora.exito { color: #66fcf1; }
+        .item-media h4 { margin: 10px 0 0 0; color: #66fcf1; overflow-wrap: anywhere; }
+        .item-media .fecha-media { margin: 4px 0 0 0; color: #8b95a1; font-size: 0.8rem; }
+        .item-media .btn-borrar { margin-top: 10px; background: #ff4c4c; color: white; border: none; padding: 6px; cursor: pointer; border-radius: 3px; width: 100%; }
+        .galeria-vacia { color: #8b95a1; }
+        
+        #modal-bienvenida { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.95); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-content { background: #1f2833; padding: 40px; border-radius: 15px; text-align: center; border: 2px solid #66fcf1; max-width: 500px; }
+        .modal-content img { width: 100%; max-height: 250px; object-fit: cover; border-radius: 10px; margin: 15px 0; border: 2px solid #e5b340; }
+
+        /* ===================== BIENVENIDA CON LA FOTO DEL EQUIPO ===================== */
+        .modal-content.modal-equipo { max-width: 760px; padding: 26px; max-height: 94vh; overflow-y: auto; box-sizing: border-box; margin: 0 16px; }
+        .modal-content.modal-equipo img { max-height: none; height: auto; object-fit: contain; margin: 0 0 18px 0; }
+        .modal-content.modal-equipo h2 { margin: 0 0 8px 0; font-size: 1.8rem; color: #66fcf1; }
+        .modal-content.modal-equipo p { color: #c5c6c7; margin: 0 auto; max-width: 56ch; line-height: 1.5; }
+
+        /* ===================== GUÍA DE ARMADO ===================== */
+        .guia-armado { max-width: 1100px; margin: 60px auto 0 auto; background: rgba(18, 21, 28, 0.8); border: 1px solid #2e3b4a; border-radius: 16px; padding: 28px; }
+        .guia-armado h3 { margin: 0 0 6px 0; font-size: 1.8rem; color: #e5b340; }
+        .guia-armado > p { margin: 0 0 18px 0; color: #c5c6c7; }
+        .aviso-sol { display: flex; gap: 10px; align-items: flex-start; background: rgba(255, 90, 60, 0.12); border: 1px solid rgba(255, 120, 90, 0.55); color: #ffd2c6; border-radius: 10px; padding: 12px 14px; margin-bottom: 20px; font-size: 0.95rem; }
+        .pestanas-guia { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+        .pestanas-guia button { background: transparent; color: #c5c6c7; border: 1px solid #45a29e; padding: 10px 16px; border-radius: 24px; cursor: pointer; font-size: 0.98rem; }
+        .pestanas-guia button[aria-selected="true"] { background: #45a29e; color: #0b0c10; font-weight: bold; }
+        .pestanas-guia button:focus-visible { outline: 2px solid #66fcf1; outline-offset: 2px; }
+        .cuerpo-guia { display: grid; grid-template-columns: minmax(0, 300px) minmax(0, 1fr); gap: 26px; }
+        .indice-pasos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; counter-reset: paso; }
+        .indice-pasos button { width: 100%; text-align: left; display: flex; gap: 10px; align-items: center; background: rgba(31, 40, 51, 0.7); color: #c5c6c7; border: 1px solid transparent; padding: 9px 12px; border-radius: 10px; cursor: pointer; font-size: 0.92rem; }
+        .indice-pasos button[aria-current="step"] { border-color: #66fcf1; color: #fff; }
+        .indice-pasos .numero-paso { flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%; display: grid; place-items: center; background: #0b0c10; border: 1px solid #45a29e; font-weight: bold; font-size: 0.85rem; }
+        .indice-pasos .hecho .numero-paso { background: #45a29e; color: #0b0c10; }
+        .paso-actual { background: rgba(31, 40, 51, 0.85); border-radius: 14px; padding: 24px; border-top: 4px solid #66fcf1; }
+        .paso-actual .contador-paso { color: #66fcf1; font-weight: bold; margin: 0 0 6px 0; }
+        .paso-actual h4 { font-size: 1.5rem; margin: 0 0 12px 0; color: #fff; }
+        .paso-actual .texto-paso { color: #d7d9dc; line-height: 1.65; margin: 0 0 14px 0; max-width: 70ch; }
+        .paso-actual .consejo-paso { background: rgba(229, 179, 64, 0.1); border-left: 3px solid #e5b340; padding: 10px 14px; border-radius: 0 8px 8px 0; color: #f1dca6; margin: 0 0 18px 0; }
+        .barra-avance { height: 8px; background: #0b0c10; border-radius: 4px; overflow: hidden; margin-bottom: 18px; }
+        .barra-avance span { display: block; height: 100%; background: linear-gradient(90deg, #45a29e, #66fcf1); transition: width 0.4s ease; }
+        .controles-paso { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+        .controles-paso button { background: #1f2833; color: #66fcf1; border: 1px solid #66fcf1; padding: 9px 16px; border-radius: 22px; cursor: pointer; font-weight: bold; }
+        .controles-paso button:disabled { opacity: 0.4; cursor: default; }
+        .controles-paso label { display: flex; gap: 8px; align-items: center; color: #c5c6c7; cursor: pointer; margin-left: auto; }
+        .controles-paso input[type="checkbox"] { width: 18px; height: 18px; accent-color: #45a29e; }
+
+        /* ===================== HISTORIA Y QR ===================== */
+        .historia-section { padding: 60px 20px; background: rgba(18, 21, 28, 0.55); }
+        .historia-contenido { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 320px; gap: 40px; align-items: center; }
+        .historia-section h2 { color: #e5b340; font-size: 2.2rem; margin: 0 0 12px 0; }
+        .historia-section p { color: #c5c6c7; line-height: 1.6; max-width: 60ch; }
+        .hitos-resumen { display: flex; flex-wrap: wrap; gap: 8px; margin: 18px 0 24px 0; padding: 0; list-style: none; }
+        .hitos-resumen li { background: rgba(31, 40, 51, 0.85); border: 1px solid #2e3b4a; border-radius: 20px; padding: 6px 12px; font-size: 0.9rem; color: #dfe3e8; }
+        .hitos-resumen strong { color: #66fcf1; }
+        .tarjeta-qr { background: #f4f6f8; color: #0b0c10; border-radius: 18px; padding: 22px; text-align: center; box-shadow: 0 0 40px rgba(102, 252, 241, 0.2); }
+        .tarjeta-qr canvas { width: 100%; max-width: 250px; height: auto; image-rendering: pixelated; display: block; margin: 0 auto 12px auto; }
+        .tarjeta-qr strong { display: block; font-size: 1.05rem; }
+        .tarjeta-qr small { color: #4a5563; display: block; margin-top: 4px; overflow-wrap: anywhere; }
+        .tarjeta-qr .qr-no-disponible { color: #4a5563; font-size: 0.92rem; margin: 0 0 12px 0; }
+        .acciones-historia { display: flex; flex-wrap: wrap; gap: 12px; }
+        .acciones-historia button { background: transparent; }
+        .acciones-historia button:disabled { opacity: 0.45; cursor: default; }
+        .acciones-historia a, .acciones-historia button { text-decoration: none; font-weight: bold; padding: 11px 22px; border-radius: 26px; font-size: 1rem; cursor: pointer; font-family: inherit; }
+
+        /* ===================== COMPAÑEROS: REGISTRO E INGRESO ===================== */
+        .companeros-section { padding: 60px 20px; }
+        .companeros-contenido { max-width: 1100px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr) 420px; gap: 40px; align-items: start; }
+        .companeros-section h2 { font-size: 2.2rem; margin: 0 0 12px 0; color: #66fcf1; }
+        .companeros-section .intro-companeros { color: #c5c6c7; line-height: 1.6; max-width: 60ch; }
+        .ventajas-cuenta { color: #dfe3e8; line-height: 1.8; padding-left: 20px; }
+        .tarjeta-cuenta { background: #1f2833; border-radius: 16px; padding: 24px; border-top: 4px solid #e5b340; }
+        .pestanas-cuenta { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; background: #0b0c10; padding: 5px; border-radius: 26px; margin-bottom: 18px; }
+        .pestanas-cuenta button { background: transparent; color: #c5c6c7; border: none; padding: 9px; border-radius: 22px; cursor: pointer; font-weight: bold; font-size: 0.95rem; }
+        .pestanas-cuenta button[aria-selected="true"] { background: #e5b340; color: #0b0c10; }
+        .form-cuenta { display: flex; flex-direction: column; gap: 8px; }
+        .form-cuenta[hidden] { display: none; }
+        .form-cuenta input { padding: 11px; border-radius: 6px; border: 1px solid #45a29e; background: #0b0c10; color: white; font-size: 1rem; box-sizing: border-box; width: 100%; }
+        .campo-clave { position: relative; }
+        .campo-clave input { padding-right: 70px; }
+        .campo-clave button { position: absolute; right: 6px; top: 50%; transform: translateY(-50%); background: none; border: none; color: #66fcf1; cursor: pointer; font-size: 0.85rem; padding: 6px; }
+        .form-cuenta > button[type="submit"], .btn-cerrar-sesion { background: #e5b340; color: #0b0c10; border: none; padding: 12px; font-weight: bold; cursor: pointer; border-radius: 8px; font-size: 1rem; margin-top: 6px; }
+        .form-cuenta > button[type="submit"]:disabled { opacity: 0.6; cursor: wait; }
+        .estado-cuenta { min-height: 1.2em; margin: 0; font-size: 0.9rem; color: #c5c6c7; }
+        .estado-cuenta.error { color: #ff8a80; }
+        .estado-cuenta.exito { color: #66fcf1; }
+        .sesion-activa h3 { margin: 0 0 4px 0; font-size: 1.4rem; }
+        .sesion-activa .usuario-sesion { color: #8b95a1; margin: 0 0 16px 0; }
+        .lista-miembros { list-style: none; padding: 0; margin: 10px 0 18px 0; max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+        .lista-miembros li { background: #0b0c10; border-radius: 8px; padding: 8px 12px; display: flex; justify-content: space-between; gap: 10px; font-size: 0.92rem; }
+        .lista-miembros span { color: #8b95a1; }
+        .btn-cerrar-sesion { width: 100%; background: transparent; color: #e5b340; border: 1px solid #e5b340; }
+        .cuenta-menu { color: #e5b340; font-size: 0.9rem; margin-left: 12px; white-space: nowrap; text-decoration: none; }
+
+        /* ===================== BITÁCORA: ACTIVIDADES Y AUTOR ===================== */
+        .columna-galeria { min-width: 0; }
+        .filtros-actividad { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+        .filtros-actividad button { background: rgba(31, 40, 51, 0.85); color: #c5c6c7; border: 1px solid #2e3b4a; padding: 7px 13px; border-radius: 18px; cursor: pointer; font-size: 0.88rem; }
+        .filtros-actividad button[aria-pressed="true"] { background: #66fcf1; color: #0b0c10; border-color: #66fcf1; font-weight: bold; }
+        .etiqueta-actividad { display: inline-block; margin-top: 8px; background: rgba(229, 179, 64, 0.15); color: #f1dca6; border-radius: 12px; padding: 3px 10px; font-size: 0.78rem; }
+        .item-media .autor-media { margin: 6px 0 0 0; color: #c5c6c7; font-size: 0.85rem; }
+        .publicar-como { margin: 0; color: #e5b340; font-size: 0.88rem; }
+        .btn-entrar { background-color: #66fcf1; color: #0b0c10; border: none; padding: 12px 30px; font-size: 1.1rem; font-weight: bold; border-radius: 25px; cursor: pointer; margin-top: 15px; }
+
+        /* VISOR DEL LOGO */
+        #visor-logo { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.92); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1100; padding: 20px; box-sizing: border-box; }
+        #visor-logo.abierto { display: flex; animation: aparecer 0.3s ease; }
+        #visor-logo img { max-width: 100%; max-height: 90vh; border-radius: 12px; border: 2px solid #e5b340; box-shadow: 0 0 40px rgba(229, 179, 64, 0.4); }
+
+        /* VISOR DEL TELESCOPIO: ocular circular con retícula que "enfoca" al integrante */
+        #visor-telescopio { position: fixed; inset: 0; background: radial-gradient(circle at center, rgba(5, 8, 20, 0.9) 0%, rgba(0, 0, 0, 0.97) 70%); backdrop-filter: blur(8px); display: none; align-items: center; justify-content: center; z-index: 1100; padding: 20px; box-sizing: border-box; }
+        #visor-telescopio.abierto { display: flex; animation: aparecer 0.3s ease; }
+        .telescopio-escena { display: flex; align-items: center; justify-content: center; gap: 30px; flex-wrap: wrap; max-width: 1000px; }
+        .telescopio-svg { width: 260px; height: 260px; flex-shrink: 0; }
+        .telescopio-svg .tubo-grande { transform-origin: 90px 150px; animation: apuntar 1s ease-out; }
+        @keyframes apuntar { from { transform: rotate(18deg); } to { transform: rotate(0deg); } }
+        .ocular-bloque { display: flex; flex-direction: column; align-items: center; text-align: center; }
+        .ocular { position: relative; width: min(380px, 78vw); aspect-ratio: 1; border-radius: 50%; overflow: hidden; border: 6px solid #e5b340; box-shadow: 0 0 0 10px #1f2833, 0 0 0 12px #45a29e, 0 0 60px rgba(102, 252, 241, 0.45); background: #000; }
+        .ocular img { width: 100%; height: 100%; object-fit: cover; object-position: center top; transform-origin: center top; display: block; }
+        /* Enfoque: la imagen pasa de borrosa y lejana a nítida */
+        .ocular img.enfocando { animation: enfocar 1.1s ease-out forwards; }
+        @keyframes enfocar { 0% { filter: blur(14px) brightness(0.4); transform: scale(1.8); } 70% { filter: blur(2px) brightness(0.95); } 100% { filter: blur(0) brightness(1); transform: scale(1.22); } }
+        .ocular .reticula { position: absolute; inset: 0; pointer-events: none; background:
+            radial-gradient(circle, transparent 55%, rgba(0, 0, 0, 0.75) 100%),
+            linear-gradient(to right, transparent calc(50% - 0.5px), rgba(102, 252, 241, 0.55) calc(50% - 0.5px), rgba(102, 252, 241, 0.55) calc(50% + 0.5px), transparent calc(50% + 0.5px)),
+            linear-gradient(to bottom, transparent calc(50% - 0.5px), rgba(102, 252, 241, 0.55) calc(50% - 0.5px), rgba(102, 252, 241, 0.55) calc(50% + 0.5px), transparent calc(50% + 0.5px)); }
+        .ocular .reticula::after { content: ''; position: absolute; inset: 30%; border: 1px dashed rgba(102, 252, 241, 0.5); border-radius: 50%; }
+        .ocular-estado { color: #66fcf1; font-size: 0.85rem; letter-spacing: 3px; margin: 18px 0 4px 0; text-transform: uppercase; min-height: 1.2em; }
+        .ocular-nombre { color: #fff; font-size: 2rem; margin: 0; text-shadow: 0 0 15px rgba(102, 252, 241, 0.5); }
+        .ocular-rol { color: #e5b340; font-weight: bold; font-size: 1.1rem; margin: 6px 0 0 0; }
+        .controles-telescopio { display: flex; gap: 12px; margin-top: 20px; flex-wrap: wrap; justify-content: center; }
+        .controles-telescopio button, .cerrar-visor { background: #1f2833; color: #66fcf1; border: 1px solid #66fcf1; padding: 10px 18px; border-radius: 25px; cursor: pointer; font-size: 1rem; font-weight: bold; transition: background 0.2s ease, color 0.2s ease; }
+        .controles-telescopio button:hover, .cerrar-visor:hover { background: #66fcf1; color: #0b0c10; }
+        .cerrar-visor { position: absolute; top: 20px; right: 20px; width: 46px; height: 46px; padding: 0; font-size: 1.4rem; }
+        @keyframes aparecer { from { opacity: 0; } to { opacity: 1; } }
+
+        @media (max-width: 1100px) {
+            .historia-contenido, .companeros-contenido { grid-template-columns: minmax(0, 1fr); }
+            .tarjeta-qr { max-width: 340px; }
+            .menu-sitio { margin-left: 16px; }
+            .menu-sitio a { padding: 8px 9px; font-size: 0.9rem; }
+        }
+        @media (max-width: 900px) {
+            .menu-sitio { display: none; }
+            .cuerpo-guia { grid-template-columns: minmax(0, 1fr); }
+            .guia-armado { padding: 18px; }
+            .bitacora-contenido { grid-template-columns: minmax(0, 1fr); }
+            .form-multimedia { position: static; }
+            .telescopio3d-contenido { grid-template-columns: 1fr; }
+            .escenario3d { height: 400px; --escala3d: 0.8; }
+            /* En pantallas angostas la constelación pasa a cuadrícula para que los íconos no se encimen */
+            .constelacion { aspect-ratio: auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 30px 10px; }
+            .lineas-constelacion { display: none; }
+            .nodo-integrante { position: static; transform: none; width: auto; }
+            /* La figura del cielo pasa arriba del panel para no taparlo */
+            .cielo-profundo { flex-direction: column; }
+            .figura-cielo { position: relative; right: auto; top: auto; transform: none; width: min(420px, 100%); margin: 0 auto 10px auto; }
+            .panel-cielo { margin-left: 0; }
+        }
+        @media (max-width: 700px) {
+            .telescopio-svg { width: 140px; height: 140px; }
+            .ocular-nombre { font-size: 1.5rem; }
+            .hero-emblema { width: 120px; height: 120px; }
+            /* En celular se navega la guía con Anterior/Siguiente para no alargar la página */
+            .indice-pasos { display: none; }
+            .pie-contenido { flex-direction: column; text-align: center; }
+            .escenario3d { height: 320px; --escala3d: 0.6; }
+            .navbar { padding: 12px 16px; }
+            .navbar h1 { font-size: 1.1rem; }
+            .btn-pantalla { font-size: 0.8rem; padding: 6px 10px; }
+            .icono-integrante { width: 88px; height: 88px; }
+            .cielo-profundo { padding: 40px 16px 160px 16px; }
+            .panel-cielo { padding: 20px; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            html { scroll-behavior: auto; }
+            .ocular img.enfocando, .telescopio-svg .tubo-grande, .tube, .lens, .nebulosa { animation: none; }
+            .ocular img.enfocando { transform: scale(1.22); }
+            .constelacion.visible line, .constelacion.visible .nodo-integrante, .cielo-profundo, .figura-cielo .figura, .figura-cielo .trazo, .figura-cielo .etiqueta-fig { transition: none; }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="cielo-estrellado" aria-hidden="true"></canvas>
+
+    <div id="modal-bienvenida">
+        <div class="modal-content modal-equipo">
+            <img src="equipo-observatorio.jpg" alt="El equipo del Observatorio Estelar UNAD | CIP Turbo">
+            <h2>¡Bienvenidos al Observatorio Estelar!</h2>
+            <p>Somos el equipo de la UNAD y el CIP Turbo. Explora nuestro telescopio, conoce su historia y comparte con nosotros cada actividad del proyecto.</p>
+            <button class="btn-entrar" onclick="cerrarModal()">Comenzar exploración</button>
+        </div>
+    </div>
+    
+    <nav class="navbar">
+        <button type="button" class="logo-circulo" onclick="abrirLogo()" aria-label="Ver logo del Observatorio Estelar" title="Ver logo"></button>
+        <h1>UNAD | CIP TURBO</h1>
+        <ul class="menu-sitio" aria-label="Secciones del sitio">
+            <li><a href="#telescopio">Telescopio</a></li>
+            <li><a href="#historia">Historia</a></li>
+            <li><a href="#equipo">Equipo</a></li>
+            <li><a href="#cielo-profundo">Cielo profundo</a></li>
+            <li><a href="#bitacora">Bitácora</a></li>
+            <li><a href="#companeros" id="enlace-cuenta">Ingresar</a></li>
+        </ul>
+        <button type="button" class="btn-pantalla" id="btn-pantalla" onclick="alternarPantallaCompleta()">⛶ Pantalla completa</button>
+    </nav>
+    
+    <header class="hero-section" id="inicio">
+        <div class="hero-emblema" role="img" aria-label="Emblema del Observatorio Estelar UNAD CIP Turbo"></div>
+        <h1 class="titulo-principal">OBSERVATORIO ESTELAR</h1>
+        <p class="hero-lema">Explora, Aprende, Descubre - Fundado en 2026</p>
+        <div class="hero-acciones">
+            <a class="accion-principal" href="#telescopio">Ver el telescopio</a>
+            <a class="accion-secundaria" href="#equipo">Conocer al equipo</a>
+            <a class="accion-secundaria" href="#companeros">Mi cuenta</a>
+        </div>
+    </header>
+    
+    <section class="comienzo-section">
+        <h2 style="color: #e5b340;">Nuestro Primer Comienzo</h2>
+        <div class="explicacion-container">
+            <button type="button" class="animacion-telescopio" onclick="abrirTelescopio(0)" aria-label="Observar al equipo con el telescopio" title="¡Haz clic para observar!">
+                <svg viewBox="0 0 100 100">
+                    <rect x="20" y="40" width="60" height="15" fill="#e5b340" class="tube" />
+                    <polygon points="80,35 80,60 95,55 95,40" fill="#333" class="lens" />
+                    <line x1="40" y1="55" x2="30" y2="90" stroke="#c5c6c7" stroke-width="4" />
+                    <line x1="50" y1="55" x2="50" y2="90" stroke="#c5c6c7" stroke-width="4" />
+                    <line x1="60" y1="55" x2="70" y2="90" stroke="#c5c6c7" stroke-width="4" />
+                </svg>
+            </button>
+            <div class="texto-explicacion">
+                <p>Todo gran viaje comienza aquí. Con nuestro telescopio apuntando a las estrellas, buscamos llevar el conocimiento del universo a la comunidad.</p>
+                <p class="pista-observar">🔭 <strong>Haz clic en el telescopio</strong> o en cualquier integrante para observarlo.</p>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Telescopio refractor en 3D: se construye con CSS desde JS (sin librerías) -->
+    <section class="telescopio3d-section" id="telescopio">
+        <div class="telescopio3d-contenido">
+            <div class="escenario3d" id="escenario3d" tabindex="0" role="group" aria-label="Modelo 3D del telescopio refractor. Arrastra o usa las flechas izquierda y derecha para girarlo.">
+                <div class="sombra-suelo"></div>
+                <div class="modelo3d" id="modelo3d"></div>
+                <p class="pista-giro">Arrastra para girar el telescopio</p>
+            </div>
+            <div>
+                <h2>Nuestro telescopio refractor</h2>
+                <p class="telescopio3d-intro">Un refractor usa una lente al frente, llamada objetivo, para reunir la luz de objetos lejanos. Esa luz viaja por el tubo y forma una imagen que el ocular amplía para nuestro ojo. Da imágenes nítidas y con buen contraste de la Luna, los planetas y las estrellas dobles, y casi no necesita mantenimiento.</p>
+                <ul class="lista-partes" id="lista-partes" aria-label="Partes del telescopio"></ul>
+                <div class="detalle-parte" id="detalle-parte" aria-live="polite">
+                    <h3 id="detalle-titulo"></h3>
+                    <p id="detalle-texto"></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Guía de armado: pasos para distintos tipos de telescopio -->
+        <div class="guia-armado" id="guia-armado">
+            <h3>Guía de armado paso a paso</h3>
+            <p>Elige el tipo de telescopio y sigue los pasos. Marca cada paso cuando lo termines para ayudar a otros compañeros a armarlo.</p>
+            <div class="aviso-sol" role="note">⚠️ <span>Nunca apuntes el telescopio ni el buscador hacia el Sol sin un filtro solar certificado: puede causar ceguera permanente en segundos.</span></div>
+            <div class="pestanas-guia" id="pestanas-guia" role="tablist" aria-label="Tipos de telescopio"></div>
+            <div class="cuerpo-guia">
+                <ol class="indice-pasos" id="indice-pasos" aria-label="Lista de pasos"></ol>
+                <div class="paso-actual" id="paso-actual" aria-live="polite">
+                    <div class="barra-avance" aria-hidden="true"><span id="barra-avance-guia" style="width: 0%;"></span></div>
+                    <p class="contador-paso" id="contador-paso"></p>
+                    <h4 id="titulo-paso"></h4>
+                    <p class="texto-paso" id="texto-paso"></p>
+                    <p class="consejo-paso" id="consejo-paso"></p>
+                    <div class="controles-paso">
+                        <button type="button" id="btn-paso-anterior" onclick="moverPaso(-1)">◀ Anterior</button>
+                        <button type="button" id="btn-paso-siguiente" onclick="moverPaso(1)">Siguiente ▶</button>
+                        <label><input type="checkbox" id="check-paso" onchange="marcarPaso(this.checked)"> Paso hecho</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Historia del telescopio: el QR lleva a la página completa de historia -->
+    <section class="historia-section" id="historia">
+        <div class="historia-contenido">
+            <div>
+                <h2>Historia del telescopio</h2>
+                <p>Desde las primeras lentes holandesas hasta el telescopio espacial James Webb: más de 400 años mirando el cielo. Escanea el código QR con la cámara del celular para leer la historia completa, incluida la de nuestro propio observatorio.</p>
+                <ul class="hitos-resumen">
+                    <li><strong>1608</strong> Lippershey</li>
+                    <li><strong>1609</strong> Galileo</li>
+                    <li><strong>1668</strong> Newton</li>
+                    <li><strong>1803</strong> Observatorio de Bogotá</li>
+                    <li><strong>1990</strong> Hubble</li>
+                    <li><strong>2021</strong> James Webb</li>
+                    <li><strong>2026</strong> Nuestro observatorio</li>
+                </ul>
+                <div class="acciones-historia">
+                    <a class="accion-principal" id="enlace-historia" href="historia-telescopio.html">Leer la historia</a>
+                    <button type="button" class="accion-secundaria" id="btn-descargar-qr" onclick="descargarQR()">Descargar QR para imprimir</button>
+                </div>
+            </div>
+            <div class="tarjeta-qr">
+                <canvas id="lienzo-qr" width="250" height="250" role="img" aria-label="Código QR hacia la historia del telescopio"></canvas>
+                <p class="qr-no-disponible" id="qr-no-disponible" hidden>El código QR se crea con la dirección real del sitio cuando la página esté publicada en internet.</p>
+                <strong>Escanea y descubre</strong>
+                <small id="url-qr"></small>
+            </div>
+        </div>
+    </section>
+
+    <!-- Constelación del equipo: cada integrante es una estrella; clic abre el telescopio -->
+    <section class="equipo-section" id="equipo">
+        <h2>Estructura del Proyecto</h2>
+        <p class="pista-observar">Haz clic en cada integrante para <strong>observarlo con el telescopio</strong>.</p>
+        <ul class="leyenda-roles" aria-label="Color según el rol">
+            <li style="--color-rol: #a66bff;">Directores</li>
+            <li style="--color-rol: #e5b340;">Liderazgo</li>
+            <li style="--color-rol: #66fcf1;">Desarrollo web</li>
+            <li style="--color-rol: #45a29e;">Investigadores</li>
+        </ul>
+        <div class="constelacion" id="constelacion">
+            <svg class="lineas-constelacion" viewBox="0 0 1000 620" aria-hidden="true">
+                <line x1="330" y1="90" x2="670" y2="90" />
+                <line x1="330" y1="90" x2="390" y2="300" />
+                <line x1="670" y1="90" x2="610" y2="300" />
+                <line x1="390" y1="300" x2="610" y2="300" />
+                <line x1="390" y1="300" x2="170" y2="500" />
+                <line x1="390" y1="300" x2="500" y2="530" />
+                <line x1="610" y1="300" x2="500" y2="530" />
+                <line x1="610" y1="300" x2="830" y2="500" />
+                <circle cx="500" cy="190" r="1.8" /><circle cx="250" cy="300" r="1.2" /><circle cx="760" cy="280" r="1.5" />
+                <circle cx="120" cy="120" r="1.2" /><circle cx="900" cy="160" r="1.8" /><circle cx="300" cy="590" r="1.3" />
+                <circle cx="700" cy="600" r="1.2" /><circle cx="960" cy="420" r="1.4" /><circle cx="40" cy="380" r="1.6" />
+            </svg>
+            <button type="button" class="nodo-integrante nodo-director" style="--x: 33%; --y: 14.52%; --orden: 0;" data-foto="Gemini_Generated_Image_hmxjazhmxjazhmxj.jpg">
+                <span class="icono-integrante"><img src="Gemini_Generated_Image_hmxjazhmxjazhmxj.jpg" alt=""></span>
+                <span class="nodo-nombre">Prof. Yesid</span>
+                <span class="nodo-rol">Director del Proyecto</span>
+            </button>
+            <button type="button" class="nodo-integrante nodo-director" style="--x: 67%; --y: 14.52%; --orden: 1;" data-foto="Gemini_Generated_Image_hmxjazhmxjazhmxj%20(1).jpg">
+                <span class="icono-integrante"><img src="Gemini_Generated_Image_hmxjazhmxjazhmxj%20(1).jpg" alt=""></span>
+                <span class="nodo-nombre">Prof. Clemente</span>
+                <span class="nodo-rol">Director Académico</span>
+            </button>
+            <button type="button" class="nodo-integrante nodo-lider" style="--x: 39%; --y: 48.39%; --orden: 2;" data-foto="xd.jpg">
+                <span class="icono-integrante"><img src="xd.jpg" alt=""></span>
+                <span class="nodo-nombre">Taliana</span>
+                <span class="nodo-rol">Líder del Observatorio</span>
+            </button>
+            <button type="button" class="nodo-integrante nodo-creador" style="--x: 61%; --y: 48.39%; --orden: 3;" data-foto="Gemin.jpg">
+                <span class="icono-integrante"><img src="Gemin.jpg" alt=""></span>
+                <span class="nodo-nombre">Adrián</span>
+                <span class="nodo-rol">Creador de la Web</span>
+            </button>
+            <button type="button" class="nodo-integrante nodo-investigador" style="--x: 17%; --y: 80.65%; --orden: 4;" data-foto="ChatGPT%20Image%2024%20sept%202026%2C%2002_57_11%20p.m.png">
+                <span class="icono-integrante"><img src="ChatGPT%20Image%2024%20sept%202026%2C%2002_57_11%20p.m.png" alt=""></span>
+                <span class="nodo-nombre">Moisés</span>
+                <span class="nodo-rol">Investigador</span>
+            </button>
+            <button type="button" class="nodo-integrante nodo-investigador" style="--x: 50%; --y: 85.48%; --orden: 5;" data-foto="cv.jpg">
+                <span class="icono-integrante"><img src="cv.jpg" alt=""></span>
+                <span class="nodo-nombre">Yilessa</span>
+                <span class="nodo-rol">Investigadora</span>
+            </button>
+            <button type="button" class="nodo-integrante nodo-investigador" style="--x: 83%; --y: 80.65%; --orden: 6;" data-foto="sistem.jpg">
+                <span class="icono-integrante"><img src="sistem.jpg" alt=""></span>
+                <span class="nodo-nombre">Didier</span>
+                <span class="nodo-rol">Investigador</span>
+            </button>
+        </div>
+    </section>
+
+    <!-- Cielo profundo: ilustración con colores que cambian según el objeto elegido -->
+    <section class="cielo-profundo" id="cielo-profundo">
+        <div class="nebulosa" aria-hidden="true"></div>
+        <span class="astro" style="left: 50%; top: 10%;" aria-hidden="true"></span>
+        <span class="astro grande" style="left: 95%; top: 9%;" aria-hidden="true"></span>
+
+        <!-- Figuras ilustradas: una por objeto; JS activa la que corresponde al botón elegido -->
+        <svg class="figura-cielo" id="figura-cielo" viewBox="0 0 500 500" role="img" aria-label="Ilustración de la Nebulosa de Orión">
+            <defs>
+                <filter id="fx-blur-grande" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="22" /></filter>
+                <filter id="fx-blur-medio" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="9" /></filter>
+                <filter id="fx-blur-fino" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" /></filter>
+                <filter id="fx-brillo" x="-200%" y="-200%" width="500%" height="500%">
+                    <feGaussianBlur stdDeviation="3" result="halo" />
+                    <feMerge><feMergeNode in="halo" /><feMergeNode in="halo" /><feMergeNode in="SourceGraphic" /></feMerge>
+                </filter>
+                <linearGradient id="grad-pilar" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#3b1b24" />
+                    <stop offset="0.35" stop-color="#1b0d15" />
+                    <stop offset="1" stop-color="#06040a" />
+                </linearGradient>
+                <g id="destello-estrella" class="destello"><line x1="-16" y1="0" x2="16" y2="0" /><line x1="0" y1="-16" x2="0" y2="16" /></g>
+            </defs>
+
+            <!-- ORIÓN: la constelación del cazador con la nebulosa M42 en su espada -->
+            <g class="figura" data-figura="orion">
+                <ellipse cx="258" cy="332" rx="70" ry="52" fill="var(--c1)" opacity="0.55" filter="url(#fx-blur-grande)" />
+                <ellipse cx="262" cy="328" rx="36" ry="26" fill="var(--c2)" opacity="0.8" filter="url(#fx-blur-medio)" />
+                <path d="M225 330 C 240 300, 280 305, 292 322 C 300 340, 275 360, 250 352" stroke="var(--c1)" stroke-width="10" fill="none" opacity="0.7" filter="url(#fx-blur-fino)" />
+                <ellipse cx="258" cy="330" rx="9" ry="7" fill="#fff" opacity="0.9" filter="url(#fx-blur-fino)" />
+                <path class="trazo" d="M245 60 L160 120 L205 270 L250 258 L295 246 L330 135 L245 60" />
+                <path class="trazo" d="M205 270 L190 430" />
+                <path class="trazo" d="M295 246 L345 420" />
+                <g filter="url(#fx-brillo)">
+                    <circle cx="245" cy="60" r="3.5" fill="#dfe8ff" />
+                    <circle cx="160" cy="120" r="7" fill="#ffae70" />
+                    <circle cx="330" cy="135" r="4.5" fill="#dfe8ff" />
+                    <circle cx="205" cy="270" r="4.5" fill="#d6e4ff" />
+                    <circle cx="250" cy="258" r="4.5" fill="#d6e4ff" />
+                    <circle cx="295" cy="246" r="4" fill="#d6e4ff" />
+                    <circle cx="190" cy="430" r="4.5" fill="#dfe8ff" />
+                    <circle cx="345" cy="420" r="7" fill="#b9d2ff" />
+                    <circle cx="255" cy="302" r="2" fill="#fff" />
+                    <circle cx="260" cy="360" r="2" fill="#fff" />
+                </g>
+                <use href="#destello-estrella" x="160" y="120" />
+                <use href="#destello-estrella" x="345" y="420" />
+                <text class="etiqueta-fig" x="148" y="104" text-anchor="end">Betelgeuse</text>
+                <text class="etiqueta-fig" x="360" y="448">Rigel</text>
+                <text class="etiqueta-fig" x="250" y="236" text-anchor="middle">Cinturón de Orión</text>
+                <text class="etiqueta-fig" x="302" y="336">M42</text>
+            </g>
+
+            <!-- VÍA LÁCTEA: la galaxia vista desde afuera, con la posición del Sol -->
+            <g class="figura" data-figura="vialactea">
+                <g id="brazos-galaxia">
+                    <path d="M250 250 C 300 200, 380 230, 390 300 C 400 380, 320 430, 240 420 C 160 410, 110 350, 120 280" stroke="var(--c2)" stroke-width="44" fill="none" opacity="0.45" filter="url(#fx-blur-medio)" />
+                    <path d="M250 250 C 300 200, 380 230, 390 300 C 400 380, 320 430, 240 420 C 160 410, 110 350, 120 280" stroke="var(--c3)" stroke-width="10" fill="none" opacity="0.6" filter="url(#fx-blur-fino)" />
+                    <path d="M250 250 C 300 200, 380 230, 390 300 C 400 380, 320 430, 240 420 C 160 410, 110 350, 120 280" stroke="var(--c2)" stroke-width="44" fill="none" opacity="0.45" filter="url(#fx-blur-medio)" transform="rotate(180 250 250)" />
+                    <path d="M250 250 C 300 200, 380 230, 390 300 C 400 380, 320 430, 240 420 C 160 410, 110 350, 120 280" stroke="var(--c3)" stroke-width="10" fill="none" opacity="0.6" filter="url(#fx-blur-fino)" transform="rotate(180 250 250)" />
+                    <path d="M250 250 C 290 215, 350 235, 355 290 C 360 345, 300 375, 250 365" stroke="var(--c3)" stroke-width="6" fill="none" opacity="0.35" filter="url(#fx-blur-fino)" transform="rotate(90 250 250)" />
+                    <path d="M250 250 C 290 215, 350 235, 355 290 C 360 345, 300 375, 250 365" stroke="var(--c3)" stroke-width="6" fill="none" opacity="0.35" filter="url(#fx-blur-fino)" transform="rotate(270 250 250)" />
+                </g>
+                <ellipse cx="250" cy="250" rx="90" ry="26" fill="var(--c1)" opacity="0.6" filter="url(#fx-blur-medio)" transform="rotate(-25 250 250)" />
+                <ellipse cx="250" cy="250" rx="55" ry="45" fill="var(--c1)" opacity="0.85" filter="url(#fx-blur-medio)" />
+                <ellipse cx="250" cy="250" rx="18" ry="15" fill="#fff" opacity="0.9" filter="url(#fx-blur-fino)" />
+                <g fill="#fff" opacity="0.85">
+                    <circle cx="330" cy="215" r="1.4" /><circle cx="372" cy="262" r="1.2" /><circle cx="360" cy="370" r="1.5" /><circle cx="300" cy="410" r="1.1" />
+                    <circle cx="200" cy="405" r="1.4" /><circle cx="140" cy="330" r="1.2" /><circle cx="170" cy="285" r="1" /><circle cx="130" cy="240" r="1.3" />
+                    <circle cx="160" cy="130" r="1.2" /><circle cx="230" cy="92" r="1.4" /><circle cx="310" cy="85" r="1" /><circle cx="370" cy="160" r="1.2" />
+                    <circle cx="265" cy="150" r="1" /><circle cx="215" cy="330" r="1.1" /><circle cx="110" cy="190" r="1" /><circle cx="395" cy="330" r="1.2" />
+                </g>
+                <circle cx="388" cy="310" r="5" fill="#ffe27a" filter="url(#fx-brillo)" />
+                <circle class="trazo" cx="388" cy="310" r="13" />
+                <path class="trazo" d="M398 320 L 425 350" />
+                <text class="etiqueta-fig" x="430" y="368" text-anchor="middle">El Sol</text>
+                <text class="etiqueta-fig" x="430" y="386" text-anchor="middle">(estamos aquí)</text>
+                <text class="etiqueta-fig" x="250" y="205" text-anchor="middle">Centro galáctico</text>
+            </g>
+
+            <!-- CARINA: pilares de polvo iluminados y la estrella Eta Carinae con sus dos lóbulos -->
+            <g class="figura" data-figura="carina">
+                <ellipse cx="230" cy="280" rx="190" ry="130" fill="var(--c1)" opacity="0.5" filter="url(#fx-blur-grande)" />
+                <ellipse cx="330" cy="200" rx="120" ry="85" fill="var(--c2)" opacity="0.55" filter="url(#fx-blur-grande)" />
+                <ellipse cx="160" cy="170" rx="90" ry="70" fill="var(--c3)" opacity="0.45" filter="url(#fx-blur-grande)" />
+                <!-- Borde luminoso: la luz de las estrellas jóvenes ilumina la punta de cada pilar -->
+                <g fill="none" stroke="var(--c1)" stroke-width="7" opacity="0.7" filter="url(#fx-blur-fino)">
+                    <path d="M40 500 C 58 450, 66 410, 84 378 C 96 356, 90 334, 104 318 C 110 300, 118 292, 124 280 C 132 292, 128 306, 138 318 C 150 334, 142 350, 156 372 C 172 400, 180 450, 205 500" />
+                    <path d="M215 500 C 228 452, 240 414, 256 386 C 266 366, 262 346, 276 330 C 284 318, 290 312, 298 308 C 306 318, 304 330, 314 344 C 322 360, 316 378, 326 398 C 340 436, 346 470, 362 500" />
+                    <path d="M372 500 C 386 468, 394 440, 408 420 C 414 412, 418 406, 422 404 C 430 414, 436 440, 446 462 C 452 478, 456 490, 462 500" />
+                </g>
+                <g fill="url(#grad-pilar)">
+                    <path d="M40 500 C 58 450, 66 410, 84 378 C 96 356, 90 334, 104 318 C 110 300, 118 292, 124 280 C 132 292, 128 306, 138 318 C 150 334, 142 350, 156 372 C 172 400, 180 450, 205 500 Z" />
+                    <path d="M215 500 C 228 452, 240 414, 256 386 C 266 366, 262 346, 276 330 C 284 318, 290 312, 298 308 C 306 318, 304 330, 314 344 C 322 360, 316 378, 326 398 C 340 436, 346 470, 362 500 Z" />
+                    <path d="M372 500 C 386 468, 394 440, 408 420 C 414 412, 418 406, 422 404 C 430 414, 436 440, 446 462 C 452 478, 456 490, 462 500 Z" />
+                </g>
+                <g fill="var(--c1)" opacity="0.75" filter="url(#fx-blur-medio)">
+                    <ellipse cx="124" cy="282" rx="10" ry="16" /><ellipse cx="298" cy="310" rx="10" ry="16" /><ellipse cx="422" cy="406" rx="8" ry="12" />
+                </g>
+                <ellipse cx="310" cy="132" rx="28" ry="15" fill="var(--c1)" opacity="0.9" filter="url(#fx-blur-fino)" transform="rotate(-40 310 132)" />
+                <ellipse cx="350" cy="166" rx="28" ry="15" fill="var(--c1)" opacity="0.9" filter="url(#fx-blur-fino)" transform="rotate(-40 350 166)" />
+                <circle cx="330" cy="149" r="5.5" fill="#fff" filter="url(#fx-brillo)" />
+                <use href="#destello-estrella" x="330" y="149" />
+                <g fill="#fff" filter="url(#fx-brillo)">
+                    <circle cx="120" cy="90" r="2" /><circle cx="420" cy="80" r="2.5" /><circle cx="230" cy="190" r="1.8" /><circle cx="440" cy="300" r="2" /><circle cx="70" cy="250" r="1.6" />
+                </g>
+                <path class="trazo" d="M345 135 L 395 95" />
+                <text class="etiqueta-fig" x="400" y="88">Eta Carinae</text>
+                <text class="etiqueta-fig" x="255" y="300" text-anchor="middle">Pilares de polvo</text>
+            </g>
+
+            <!-- PLÉYADES: las siete hermanas envueltas en polvo que refleja su luz azul -->
+            <g class="figura" data-figura="pleyades">
+                <g stroke="var(--c3)" stroke-width="14" fill="none" opacity="0.28" filter="url(#fx-blur-medio)">
+                    <path d="M110 150 L 300 320" /><path d="M160 110 L 360 290" /><path d="M200 230 L 390 380" /><path d="M90 230 L 250 360" />
+                </g>
+                <ellipse cx="255" cy="215" rx="170" ry="120" fill="var(--c2)" opacity="0.35" filter="url(#fx-blur-grande)" />
+                <path class="trazo" d="M140 215 L 185 265 L 265 255 L 375 270 L 380 232 M 265 255 L 195 165 L 225 115" stroke-dasharray="4 6" />
+                <g filter="url(#fx-brillo)">
+                    <circle cx="265" cy="255" r="7.5" fill="#d6e8ff" />
+                    <circle cx="375" cy="270" r="6" fill="#d6e8ff" />
+                    <circle cx="380" cy="232" r="4" fill="#d6e8ff" />
+                    <circle cx="140" cy="215" r="6" fill="#d6e8ff" />
+                    <circle cx="195" cy="165" r="5.5" fill="#d6e8ff" />
+                    <circle cx="225" cy="115" r="5" fill="#d6e8ff" />
+                    <circle cx="185" cy="265" r="5.5" fill="#d6e8ff" />
+                    <circle cx="120" cy="170" r="3" fill="#d6e8ff" />
+                    <circle cx="215" cy="85" r="2.5" fill="#d6e8ff" />
+                </g>
+                <use href="#destello-estrella" x="265" y="255" />
+                <use href="#destello-estrella" x="375" y="270" />
+                <use href="#destello-estrella" x="140" y="215" />
+                <text class="etiqueta-fig" x="265" y="285" text-anchor="middle">Alcíone</text>
+                <text class="etiqueta-fig" x="392" y="298" text-anchor="middle">Atlas</text>
+                <text class="etiqueta-fig" x="392" y="222">Pléione</text>
+                <text class="etiqueta-fig" x="126" y="240" text-anchor="end">Electra</text>
+                <text class="etiqueta-fig" x="182" y="160" text-anchor="end">Maia</text>
+                <text class="etiqueta-fig" x="240" y="110">Taígeta</text>
+                <text class="etiqueta-fig" x="185" y="295" text-anchor="middle">Mérope</text>
+            </g>
+        </svg>
+        <!-- Horizonte de Turbo: mar del golfo de Urabá, palmeras y la cúpula del observatorio -->
+        <svg class="horizonte-turbo" viewBox="0 0 1440 200" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+            <rect x="0" y="150" width="1440" height="50" fill="#050914" />
+            <g stroke="var(--c1)" stroke-opacity="0.35" stroke-width="2" stroke-linecap="round">
+                <line x1="980" y1="162" x2="1060" y2="162" /><line x1="1010" y1="172" x2="1090" y2="172" /><line x1="960" y1="182" x2="1020" y2="182" />
+                <line x1="420" y1="166" x2="470" y2="166" /><line x1="700" y1="178" x2="760" y2="178" />
+            </g>
+            <path d="M0 152 C 90 128, 190 126, 300 142 C 360 150, 420 150, 470 150 L 0 150 Z" fill="#03050b" />
+            <path d="M1040 150 C 1100 126, 1200 118, 1300 124 C 1370 128, 1410 136, 1440 138 L 1440 150 Z" fill="#03050b" />
+            <!-- Cúpula del observatorio con la ranura abierta -->
+            <rect x="1150" y="102" width="130" height="48" fill="#02030a" />
+            <path d="M1155 102 A 60 60 0 0 1 1275 102 Z" fill="#02030a" />
+            <path d="M1208 46 L 1222 46 L 1224 102 L 1206 102 Z" fill="var(--c1)" fill-opacity="0.55" />
+            <line x1="1215" y1="80" x2="1250" y2="40" stroke="#02030a" stroke-width="9" stroke-linecap="round" />
+            <rect x="1180" y="120" width="14" height="30" fill="var(--c3)" fill-opacity="0.35" />
+            <!-- Palmeras -->
+            <g fill="none" stroke="#02030a" stroke-linecap="round">
+                <path d="M110 152 Q 104 110 128 64" stroke-width="7" />
+                <path d="M128 64 Q 90 50 62 70" stroke-width="5" /><path d="M128 64 Q 110 30 80 28" stroke-width="5" />
+                <path d="M128 64 Q 150 26 186 34" stroke-width="5" /><path d="M128 64 Q 170 56 190 84" stroke-width="5" />
+                <path d="M128 64 Q 128 36 140 18" stroke-width="4" />
+                <path d="M220 152 Q 226 120 212 92" stroke-width="6" />
+                <path d="M212 92 Q 186 80 170 96" stroke-width="4" /><path d="M212 92 Q 204 66 184 62" stroke-width="4" />
+                <path d="M212 92 Q 236 70 258 78" stroke-width="4" /><path d="M212 92 Q 244 94 252 112" stroke-width="4" />
+            </g>
+        </svg>
+        <div class="panel-cielo">
+            <h2>Cielo profundo</h2>
+            <p class="subtitulo-cielo">Elige un objeto y el cielo cambia a sus colores.</p>
+            <div class="temas-cielo" id="temas-cielo" role="group" aria-label="Objetos del cielo profundo"></div>
+            <div class="objeto-cielo" aria-live="polite">
+                <figure class="foto-real">
+                    <img id="cielo-foto" src="img-cielo/orion-m42.jpg" alt="">
+                    <figcaption id="cielo-credito"></figcaption>
+                </figure>
+                <h3 id="cielo-nombre"></h3>
+                <p id="cielo-texto"></p>
+                <p class="cuando-verlo"><strong>Cuándo verlo desde Turbo:</strong> <span id="cielo-cuando"></span></p>
+            </div>
+        </div>
+    </section>
+    
+    <section class="bitacora-section" id="bitacora">
+        <h2 style="color: #66fcf1;">Bitácora Multimedia</h2>
+        <p>Añade imágenes o videos para la presentación.</p>
+        <p class="modo-bitacora" id="modo-bitacora" role="status"></p>
+        <div class="bitacora-contenido">
+        <form class="form-multimedia" onsubmit="agregarMedia(event)">
+            <label class="etiqueta-campo" for="media-titulo">Título</label>
+            <input type="text" id="media-titulo" placeholder="Ej: Primera noche de observación" maxlength="100" required>
+            <label class="etiqueta-campo" for="media-actividad">Actividad</label>
+            <select id="media-actividad" required></select>
+            <div id="campo-autor">
+                <label class="etiqueta-campo" for="media-autor">Tu nombre (opcional)</label>
+                <input type="text" id="media-autor" maxlength="40" placeholder="Así se verá quién aportó">
+            </div>
+            <p class="publicar-como" id="publicar-como" hidden></p>
+            <label class="etiqueta-campo" for="media-tipo">Tipo</label>
+            <select id="media-tipo" onchange="actualizarCamposBitacora()">
+                <option value="imagen">Imagen</option>
+                <option value="video">Video (MP4 o WEBM)</option>
+                <option value="youtube">Video de YouTube (enlace)</option>
+            </select>
+            <div id="campo-archivo" hidden>
+                <label class="etiqueta-campo" for="media-archivo">Archivo</label>
+                <input type="file" id="media-archivo">
+                <small class="ayuda-campo" id="ayuda-archivo"></small>
+            </div>
+            <div id="campo-url">
+                <label class="etiqueta-campo" for="media-url" id="etiqueta-url">Enlace o nombre del archivo</label>
+                <input type="text" id="media-url" placeholder="Ej: foto1.jpg, mi_video.mp4 o URL">
+            </div>
+            <progress id="progreso-subida" max="100" value="0" hidden></progress>
+            <p class="estado-bitacora" id="estado-bitacora" aria-live="polite"></p>
+            <button type="submit" id="btn-subir">Añadir a la Bitácora</button>
+        </form>
+        <div class="columna-galeria">
+            <div class="filtros-actividad" id="filtros-actividad" role="group" aria-label="Filtrar por actividad"></div>
+            <div class="galeria-bitacora" id="contenedor-media"></div>
+        </div>
+        </div>
+    </section>
+
+    <!-- Compañeros del proyecto: registro e ingreso con usuario y contraseña -->
+    <section class="companeros-section" id="companeros">
+        <div class="companeros-contenido">
+            <div>
+                <h2>Compañeros del proyecto</h2>
+                <p class="intro-companeros">Estás dentro del Observatorio Estelar con tu cuenta. Con ella:</p>
+                <ul class="ventajas-cuenta">
+                    <li>Tus fotos y videos en la bitácora llevan tu nombre verificado.</li>
+                    <li>Ves la lista de compañeros registrados en el proyecto.</li>
+                    <li>Tu sesión queda abierta en tu celular durante 30 días.</li>
+                </ul>
+                <p class="modo-bitacora" id="aviso-cuentas" hidden></p>
+            </div>
+            <div class="tarjeta-cuenta" id="tarjeta-cuenta">
+                <div id="bloque-acceso">
+                    <div class="pestanas-cuenta" role="tablist" aria-label="Acceso">
+                        <button type="button" role="tab" id="pestana-ingresar" aria-selected="true" onclick="mostrarFormularioCuenta('ingresar')">Iniciar sesión</button>
+                        <button type="button" role="tab" id="pestana-registrar" aria-selected="false" onclick="mostrarFormularioCuenta('registrar')">Crear cuenta</button>
+                    </div>
+                    <form class="form-cuenta" id="form-ingresar" onsubmit="enviarCuenta(event, 'iniciar')">
+                        <label class="etiqueta-campo" for="ingreso-usuario">Usuario</label>
+                        <input type="text" id="ingreso-usuario" autocomplete="username" autocapitalize="none" required>
+                        <label class="etiqueta-campo" for="ingreso-clave">Contraseña</label>
+                        <div class="campo-clave">
+                            <input type="password" id="ingreso-clave" autocomplete="current-password" required>
+                            <button type="button" onclick="alternarClave('ingreso-clave', this)">Mostrar</button>
+                        </div>
+                        <p class="estado-cuenta" id="estado-ingresar" aria-live="polite"></p>
+                        <button type="submit">Iniciar sesión</button>
+                    </form>
+                    <form class="form-cuenta" id="form-registrar" onsubmit="enviarCuenta(event, 'registrar')" hidden>
+                        <label class="etiqueta-campo" for="registro-nombre">Nombre completo</label>
+                        <input type="text" id="registro-nombre" autocomplete="name" maxlength="60" required>
+                        <label class="etiqueta-campo" for="registro-usuario">Usuario</label>
+                        <input type="text" id="registro-usuario" autocomplete="username" autocapitalize="none" maxlength="20" pattern="[A-Za-z0-9._]{3,20}" title="De 3 a 20 caracteres: letras sin tilde, números, punto o guion bajo" required>
+                        <small class="ayuda-campo">De 3 a 20 caracteres: letras sin tilde, números, punto o guion bajo.</small>
+                        <label class="etiqueta-campo" for="registro-clave">Contraseña</label>
+                        <div class="campo-clave">
+                            <input type="password" id="registro-clave" autocomplete="new-password" minlength="8" maxlength="72" required>
+                            <button type="button" onclick="alternarClave('registro-clave', this)">Mostrar</button>
+                        </div>
+                        <label class="etiqueta-campo" for="registro-clave2">Repite la contraseña</label>
+                        <input type="password" id="registro-clave2" autocomplete="new-password" minlength="8" maxlength="72" required>
+                        <small class="ayuda-campo">Mínimo 8 caracteres.</small>
+                        <p class="estado-cuenta" id="estado-registrar" aria-live="polite"></p>
+                        <button type="submit">Crear cuenta</button>
+                    </form>
+                </div>
+                <div class="sesion-activa" id="bloque-sesion" hidden>
+                    <h3 id="saludo-sesion"></h3>
+                    <p class="usuario-sesion" id="usuario-sesion"></p>
+                    <strong>Compañeros registrados</strong>
+                    <ul class="lista-miembros" id="lista-miembros"></ul>
+                    <button type="button" class="btn-cerrar-sesion" onclick="cerrarSesion()">Cerrar sesión</button>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="pie-sitio">
+        <div class="pie-contenido">
+            <div class="pie-marca">
+                <span class="pie-logo" aria-hidden="true"></span>
+                <div>
+                    <strong>Observatorio Estelar</strong>
+                    UNAD | CIP Turbo · Turbo, Antioquia · Fundado en 2026
+                </div>
+            </div>
+            <p>Sitio creado por Adrián · Fotos del cielo: NASA, ESA y ESO (ver créditos en cada foto)</p>
+            <a href="#inicio">Volver arriba</a>
+        </div>
+    </footer>
+
+    <!-- Visor del logo completo -->
+    <div id="visor-logo" role="dialog" aria-modal="true" aria-label="Logo del Observatorio Estelar" onclick="cerrarLogo()">
+        <button type="button" class="cerrar-visor" onclick="cerrarLogo()" aria-label="Cerrar">✕</button>
+        <img src="logo.jpg" alt="Logo UNAD CIP Turbo - Observatorio Estelar, fundado en 2026" onclick="event.stopPropagation()">
+    </div>
+
+    <!-- Visor del telescopio: muestra al integrante seleccionado a través del ocular -->
+    <div id="visor-telescopio" role="dialog" aria-modal="true" aria-label="Observación con telescopio">
+        <button type="button" class="cerrar-visor" onclick="cerrarTelescopio()" aria-label="Cerrar telescopio">✕</button>
+        <div class="telescopio-escena">
+            <svg class="telescopio-svg" viewBox="0 0 260 260" aria-hidden="true">
+                <g class="tubo-grande">
+                    <rect x="40" y="120" width="170" height="36" rx="6" fill="#e5b340" transform="rotate(-20 125 138)" />
+                    <rect x="190" y="104" width="34" height="50" rx="4" fill="#c79a2e" transform="rotate(-20 125 138)" />
+                    <rect x="28" y="126" width="18" height="24" rx="3" fill="#333" transform="rotate(-20 125 138)" />
+                    <circle cx="228" cy="92" r="9" fill="#66fcf1" opacity="0.8" />
+                </g>
+                <circle cx="115" cy="160" r="8" fill="#c5c6c7" />
+                <line x1="115" y1="165" x2="75" y2="245" stroke="#c5c6c7" stroke-width="6" stroke-linecap="round" />
+                <line x1="115" y1="165" x2="115" y2="248" stroke="#c5c6c7" stroke-width="6" stroke-linecap="round" />
+                <line x1="115" y1="165" x2="155" y2="245" stroke="#c5c6c7" stroke-width="6" stroke-linecap="round" />
+            </svg>
+            <div class="ocular-bloque">
+                <div class="ocular">
+                    <img id="ocular-imagen" src="" alt="">
+                    <div class="reticula"></div>
+                </div>
+                <p class="ocular-estado" id="ocular-estado">Enfocando…</p>
+                <h3 class="ocular-nombre" id="ocular-nombre"></h3>
+                <p class="ocular-rol" id="ocular-rol"></p>
+                <div class="controles-telescopio">
+                    <button type="button" onclick="moverTelescopio(-1)" aria-label="Integrante anterior">◀ Anterior</button>
+                    <button type="button" id="btn-voz" onclick="alternarVoz()" aria-pressed="true">🔊 Voz activada</button>
+                    <button type="button" onclick="moverTelescopio(1)" aria-label="Integrante siguiente">Siguiente ▶</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- qrcode-generator 1.4.4 (Kazuhiko Arase, licencia MIT), copia local para funcionar sin CDN -->
+    <script src="js/qrcode.min.js"></script>
+    <script>
+        function cerrarModal() { 
+            document.getElementById('modal-bienvenida').style.display = 'none'; 
+        }
+        
+        /* ===================== BITÁCORA MULTIMEDIA ===================== */
+        // Modo "nube": la página está publicada en Hostinger y todo se guarda en el servidor (visible para todos).
+        // Modo "local": la página se abrió desde el PC; se usa el guardado del navegador como antes.
+        const API_BITACORA = '/api/bitacora.php';
+        const CLAVE_LOCAL = 'bitacoraObservatorioPreview';
+        let modoBitacora = 'local';
+        // Límites de tamaño en MB; el servidor informa los reales del hosting al cargar la bitácora
+        let limitesMB = { imagen: 10, video: 50 };
+        // En Vercel los archivos van directo del navegador a Vercel Blob (el servidor lo indica al cargar)
+        let subidaDirecta = false;
+
+        function leerLocal() {
+            try { return JSON.parse(localStorage.getItem(CLAVE_LOCAL)) || []; } catch (e) { return []; }
+        }
+        function guardarLocal(datos) {
+            try { localStorage.setItem(CLAVE_LOCAL, JSON.stringify(datos)); } catch (e) { mostrarEstado('Tu navegador no permite guardar datos locales.', 'error'); }
+        }
+
+        function mostrarEstado(texto, clase = '') {
+            const estado = document.getElementById('estado-bitacora');
+            estado.textContent = texto;
+            estado.className = 'estado-bitacora' + (clase ? ' ' + clase : '');
+        }
+
+        // Muestra solo los campos que aplican según el modo y el tipo elegido
+        function actualizarCamposBitacora() {
+            const tipo = document.getElementById('media-tipo').value;
+            const usaArchivo = modoBitacora === 'nube' && tipo !== 'youtube';
+            const archivo = document.getElementById('media-archivo');
+            const url = document.getElementById('media-url');
+            document.getElementById('campo-archivo').hidden = !usaArchivo;
+            document.getElementById('campo-url').hidden = usaArchivo;
+            archivo.required = usaArchivo;
+            url.required = !usaArchivo;
+            archivo.accept = tipo === 'video' ? 'video/mp4,video/webm' : 'image/jpeg,image/png,image/webp,image/gif';
+            document.getElementById('ayuda-archivo').textContent = tipo === 'video'
+                ? `MP4 o WEBM, máximo ${limitesMB.video} MB. Para videos más pesados usa un enlace de YouTube.`
+                : `JPG, PNG, WEBP o GIF, máximo ${limitesMB.imagen} MB.`;
+            if (tipo === 'youtube') {
+                document.getElementById('etiqueta-url').textContent = 'Enlace de YouTube';
+                url.placeholder = 'Ej: https://youtu.be/abc123XYZ00';
+            } else {
+                document.getElementById('etiqueta-url').textContent = 'Enlace o nombre del archivo';
+                url.placeholder = 'Ej: foto1.jpg, mi_video.mp4 o URL';
+            }
+        }
+
+        // Convierte cualquier enlace de YouTube (watch, youtu.be, shorts) en enlace embebible
+        function enlaceEmbedYoutube(url) {
+            const coincidencia = String(url).match(/(?:youtube\.com\/(?:watch\?(?:.*&)?v=|embed\/|shorts\/|live\/)|youtube-nocookie\.com\/embed\/|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+            return coincidencia ? `https://www.youtube-nocookie.com/embed/${coincidencia[1]}` : null;
+        }
+
+        // Actividades del proyecto (misma lista que valida el servidor en api/bitacora.php)
+        const ACTIVIDADES = {
+            observacion: 'Observación nocturna',
+            taller: 'Taller o clase',
+            montaje: 'Montaje y mantenimiento',
+            salida: 'Salida de campo',
+            divulgacion: 'Charla o divulgación',
+            reunion: 'Reunión del equipo',
+            otra: 'Otra actividad'
+        };
+        let publicacionesBitacora = [];
+        let filtroActividad = 'todas';
+
+        function prepararActividades() {
+            const selector = document.getElementById('media-actividad');
+            Object.entries(ACTIVIDADES).forEach(([clave, nombre]) => {
+                const opcion = document.createElement('option');
+                opcion.value = clave;
+                opcion.textContent = nombre;
+                selector.appendChild(opcion);
+            });
+        }
+
+        // Botones de filtro con el número de publicaciones de cada actividad
+        function dibujarFiltros() {
+            const contenedor = document.getElementById('filtros-actividad');
+            contenedor.innerHTML = '';
+            const conteo = {};
+            publicacionesBitacora.forEach(item => { const a = item.actividad || 'otra'; conteo[a] = (conteo[a] || 0) + 1; });
+            const opciones = [['todas', 'Todas', publicacionesBitacora.length]]
+                .concat(Object.entries(ACTIVIDADES).filter(([clave]) => conteo[clave]).map(([clave, nombre]) => [clave, nombre, conteo[clave]]));
+            if (!conteo[filtroActividad] && filtroActividad !== 'todas') filtroActividad = 'todas';
+            opciones.forEach(([clave, nombre, total]) => {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.textContent = `${nombre} (${total})`;
+                boton.setAttribute('aria-pressed', String(clave === filtroActividad));
+                boton.addEventListener('click', () => { filtroActividad = clave; dibujarGaleria(publicacionesBitacora); });
+                contenedor.appendChild(boton);
+            });
+        }
+
+        // Dibuja la galería con textContent y atributos: el título nunca se interpreta como HTML
+        function dibujarGaleria(items) {
+            publicacionesBitacora = items;
+            dibujarFiltros();
+            const contenedor = document.getElementById('contenedor-media');
+            contenedor.innerHTML = '';
+            const visibles = filtroActividad === 'todas' ? items : items.filter(item => (item.actividad || 'otra') === filtroActividad);
+            if (!visibles.length) {
+                const vacio = document.createElement('p');
+                vacio.className = 'galeria-vacia';
+                vacio.textContent = 'Todavía no hay publicaciones. Sube la primera foto o video de una actividad del observatorio.';
+                contenedor.appendChild(vacio);
+                return;
+            }
+            visibles.forEach(item => {
+                const div = document.createElement('div');
+                div.className = 'item-media';
+                let medio;
+                if (item.tipo === 'imagen') {
+                    medio = document.createElement('img');
+                    medio.src = item.url;
+                    medio.alt = item.titulo;
+                    medio.loading = 'lazy';
+                    medio.onerror = () => { medio.onerror = null; medio.src = 'https://placehold.co/600x400?text=Error+al+cargar+imagen'; };
+                } else if (item.tipo === 'video') {
+                    medio = document.createElement('video');
+                    medio.controls = true;
+                    medio.preload = 'metadata';
+                    medio.src = item.url;
+                } else {
+                    medio = document.createElement('iframe');
+                    medio.src = enlaceEmbedYoutube(item.url) || 'about:blank';
+                    medio.title = item.titulo;
+                    medio.allowFullscreen = true;
+                    medio.setAttribute('frameborder', '0');
+                    medio.setAttribute('allow', 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture');
+                }
+                const titulo = document.createElement('h4');
+                titulo.textContent = item.titulo;
+                const actividad = document.createElement('span');
+                actividad.className = 'etiqueta-actividad';
+                actividad.textContent = ACTIVIDADES[item.actividad] || ACTIVIDADES.otra;
+                div.append(medio, titulo, actividad);
+                if (item.autor) {
+                    const autor = document.createElement('p');
+                    autor.className = 'autor-media';
+                    autor.textContent = `Aportado por ${item.autor}${item.verificado ? ' ✔' : ''}`;
+                    if (item.verificado) autor.title = 'Compañero con cuenta en el proyecto';
+                    div.appendChild(autor);
+                }
+                if (item.fecha) {
+                    const fecha = document.createElement('p');
+                    fecha.className = 'fecha-media';
+                    fecha.textContent = new Date(item.fecha).toLocaleString('es-CO', { dateStyle: 'medium', timeStyle: 'short' });
+                    div.appendChild(fecha);
+                }
+                const borrar = document.createElement('button');
+                borrar.type = 'button';
+                borrar.className = 'btn-borrar';
+                borrar.textContent = 'Borrar';
+                borrar.addEventListener('click', () => borrarMedia(item.id, item.titulo));
+                div.appendChild(borrar);
+                contenedor.appendChild(div);
+            });
+        }
+
+        async function cargarMedia() {
+            const aviso = document.getElementById('modo-bitacora');
+            if (location.protocol !== 'file:') {
+                try {
+                    const controlador = new AbortController();
+                    const tiempo = setTimeout(() => controlador.abort(), 8000);
+                    const respuesta = await fetch(API_BITACORA, { cache: 'no-store', signal: controlador.signal });
+                    clearTimeout(tiempo);
+                    if (respuesta.status === 401) { location.replace('./'); return; }
+                    const datos = await respuesta.json();
+                    if (!respuesta.ok || !datos.ok) throw new Error(datos.error || 'Respuesta no válida');
+                    modoBitacora = 'nube';
+                    aviso.textContent = '🌐 Bitácora compartida: lo que subas aquí lo ven todos los compañeros del proyecto.';
+                    aviso.className = 'modo-bitacora nube';
+                    actualizarCamposBitacora();
+                    subidaDirecta = !!datos.subidaDirecta;
+                    if (datos.limites) {
+                        limitesMB = {
+                            imagen: Math.floor((datos.limites.imagen / 1048576) * 10) / 10,
+                            video: Math.floor((datos.limites.video / 1048576) * 10) / 10
+                        };
+                        actualizarCamposBitacora();
+                    }
+                    dibujarGaleria(datos.items);
+                    return;
+                } catch (e) {
+                    // Sin servidor PHP disponible: se usa el modo local
+                }
+            }
+            modoBitacora = 'local';
+            // El aviso distingue entre abrir el archivo en el PC y una publicación sin servidor PHP (ej. Netlify)
+            aviso.textContent = location.protocol === 'file:'
+                ? '💻 Modo local: estás viendo la página desde tu PC, así que lo que agregues solo se guarda en este navegador. Al publicarla en Hostinger se vuelve compartida.'
+                : '📱 Bitácora personal: lo que agregues se guarda solo en este dispositivo y no lo verán otras personas.';
+            aviso.className = 'modo-bitacora';
+            actualizarCamposBitacora();
+            dibujarGaleria(leerLocal());
+        }
+
+        // Envía el formulario mostrando el progreso (fetch no informa el avance de subida)
+        function enviarAlServidor(formulario) {
+            return new Promise((resolver, rechazar) => {
+                const peticion = new XMLHttpRequest();
+                const barra = document.getElementById('progreso-subida');
+                peticion.open('POST', API_BITACORA);
+                peticion.upload.onprogress = (e) => {
+                    if (e.lengthComputable) { barra.hidden = false; barra.value = Math.round((e.loaded / e.total) * 100); }
+                };
+                peticion.onload = () => {
+                    barra.hidden = true;
+                    let datos = {};
+                    // Algunos hostings anteponen avisos HTML de PHP; se lee solo la parte JSON de la respuesta
+                    const texto = peticion.responseText || '';
+                    const inicio = texto.indexOf('{"ok"');
+                    try { datos = JSON.parse(inicio >= 0 ? texto.slice(inicio) : texto); } catch (e) { /* respuesta no JSON */ }
+                    if (peticion.status === 413 && !datos.error) datos.error = 'El archivo es más grande de lo que permite el servidor. Redúcelo o súbelo a YouTube y comparte el enlace.';
+                    if (peticion.status === 401) { location.replace('./'); return; }
+                    if (peticion.status >= 200 && peticion.status < 300 && datos.ok) resolver(datos);
+                    else rechazar(new Error(datos.error || `El servidor respondió con error ${peticion.status}.`));
+                };
+                peticion.onerror = () => { barra.hidden = true; rechazar(new Error('Sin conexión con el servidor. Revisa tu internet e inténtalo de nuevo.')); };
+                peticion.send(formulario);
+            });
+        }
+
+        async function agregarMedia(event) {
+            event.preventDefault();
+            const titulo = document.getElementById('media-titulo').value.trim();
+            const tipo = document.getElementById('media-tipo').value;
+            const url = document.getElementById('media-url').value.trim();
+            const boton = document.getElementById('btn-subir');
+
+            if (tipo === 'youtube' && !enlaceEmbedYoutube(url)) {
+                mostrarEstado('Ese enlace no es de un video de YouTube. Cópialo desde el botón "Compartir" de YouTube.', 'error');
+                return;
+            }
+
+            if (modoBitacora === 'local') {
+                const datos = leerLocal();
+                const autorLocal = document.getElementById('media-autor').value.trim();
+                datos.unshift({ id: Date.now(), titulo, tipo, url, actividad: document.getElementById('media-actividad').value, autor: autorLocal || 'Visitante', fecha: new Date().toISOString() });
+                guardarLocal(datos);
+                document.getElementById('media-titulo').value = '';
+                document.getElementById('media-url').value = '';
+                mostrarEstado('Guardado en este navegador.', 'exito');
+                dibujarGaleria(datos);
+                return;
+            }
+
+            const formulario = new FormData();
+            formulario.append('accion', 'subir');
+            formulario.append('titulo', titulo);
+            formulario.append('tipo', tipo);
+            formulario.append('actividad', document.getElementById('media-actividad').value);
+            formulario.append('autor', document.getElementById('media-autor').value.trim());
+            let archivoElegido = null;
+            if (tipo === 'youtube') {
+                formulario.append('url', url);
+            } else {
+                const archivo = document.getElementById('media-archivo').files[0];
+                archivoElegido = archivo;
+                if (!archivo) { mostrarEstado('Elige un archivo para subir.', 'error'); return; }
+                const limite = limitesMB[tipo];
+                if (archivo.size > limite * 1024 * 1024) {
+                    mostrarEstado(`El archivo pesa más de ${limite} MB, el máximo que permite el servidor. Redúcelo o súbelo a YouTube y comparte el enlace.`, 'error');
+                    return;
+                }
+                if (!subidaDirecta) formulario.append('archivo', archivo);
+            }
+
+            boton.disabled = true;
+            boton.textContent = 'Subiendo…';
+            mostrarEstado('Subiendo a la bitácora compartida…');
+            try {
+                if (subidaDirecta && archivoElegido) {
+                    // Vercel: primero el archivo va a Vercel Blob y luego se registra la publicación
+                    const direccion = await subirArchivoDirecto(archivoElegido, tipo);
+                    formulario.set('accion', 'publicar');
+                    formulario.append('url', direccion);
+                }
+                await enviarAlServidor(formulario);
+                document.getElementById('media-titulo').value = '';
+                document.getElementById('media-url').value = '';
+                document.getElementById('media-archivo').value = '';
+                await cargarMedia();
+                mostrarEstado('Publicado. Ya lo ven todos los compañeros.', 'exito');
+            } catch (error) {
+                mostrarEstado(error.message, 'error');
+            } finally {
+                boton.disabled = false;
+                boton.textContent = 'Añadir a la Bitácora';
+            }
+        }
+
+        // Sube el archivo directo a Vercel Blob mostrando el avance; el servidor solo autoriza la subida
+        async function subirArchivoDirecto(archivo, tipo) {
+            const { upload } = await import('./js/blob-cliente.js');
+            const barra = document.getElementById('progreso-subida');
+            const extension = (archivo.name.split('.').pop() || '').toLowerCase().replace(/[^a-z0-9]/g, '').slice(0, 5) || 'bin';
+            barra.hidden = false;
+            barra.value = 0;
+            try {
+                const resultado = await upload(`bitacora/${tipo}.${extension}`, archivo, {
+                    access: 'public',
+                    handleUploadUrl: 'api/subida',
+                    clientPayload: tipo,
+                    contentType: archivo.type,
+                    onUploadProgress: (avance) => { barra.value = Math.round(avance.percentage); },
+                });
+                return resultado.url;
+            } catch (error) {
+                const mensaje = String(error && error.message || '');
+                if (/content type|contentType/i.test(mensaje)) throw new Error('Formato no permitido. Sube imágenes JPG, PNG, WEBP o GIF, o videos MP4 o WEBM.');
+                if (/size|large|maximum/i.test(mensaje)) throw new Error(`El archivo supera el tamaño permitido (${limitesMB[tipo]} MB).`);
+                if (/401|sesión/i.test(mensaje)) { location.replace('./'); throw new Error('Tu sesión terminó.'); }
+                throw new Error('No se pudo subir el archivo. Revisa tu conexión e inténtalo de nuevo.');
+            } finally {
+                barra.hidden = true;
+            }
+        }
+
+        async function borrarMedia(id, titulo) {
+            if (!confirm(`¿Borrar "${titulo}" de la bitácora?` + (modoBitacora === 'nube' ? ' Se quitará para todos los compañeros.' : ''))) return;
+            if (modoBitacora === 'local') {
+                const datos = leerLocal().filter(item => item.id !== id);
+                guardarLocal(datos);
+                dibujarGaleria(datos);
+                return;
+            }
+            const formulario = new FormData();
+            formulario.append('accion', 'borrar');
+            formulario.append('id', id);
+            try {
+                await enviarAlServidor(formulario);
+                await cargarMedia();
+                mostrarEstado('Publicación borrada.', 'exito');
+            } catch (error) {
+                mostrarEstado(error.message, 'error');
+            }
+        }
+
+        window.onload = cargarMedia;
+
+        /* ===================== PANTALLA COMPLETA ===================== */
+        // Expande toda la página (Chrome, Opera, Edge, Firefox); Esc o el mismo botón la restauran
+        function alternarPantallaCompleta() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => alert('Tu navegador bloqueó la pantalla completa. Presiona F11.'));
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        document.addEventListener('fullscreenchange', () => {
+            document.getElementById('btn-pantalla').textContent = document.fullscreenElement ? '✕ Salir de pantalla completa' : '⛶ Pantalla completa';
+        });
+
+        /* ===================== LOGO ===================== */
+        function abrirLogo() { document.getElementById('visor-logo').classList.add('abierto'); }
+        function cerrarLogo() { document.getElementById('visor-logo').classList.remove('abierto'); }
+
+        /* ===================== TELESCOPIO ===================== */
+        // Los integrantes se leen de las tarjetas: el nombre y rol que se muestran/anuncian son siempre los de la página
+        let integrantes = [];
+        let indiceActual = 0;
+        let temporizadorEnfoque = null;
+        let vozActiva = true;
+        try { vozActiva = localStorage.getItem('observatorioVoz') !== 'off'; } catch (e) { /* almacenamiento bloqueado: se usa el valor por defecto */ }
+
+        // Los nodos de la constelación son botones: mouse, teclado y lector de pantalla funcionan sin código extra
+        function prepararIntegrantes() {
+            const nodos = document.querySelectorAll('#constelacion .nodo-integrante');
+            integrantes = Array.from(nodos).map((nodo, i) => {
+                const nombre = nodo.querySelector('.nodo-nombre').textContent.trim();
+                const rol = nodo.querySelector('.nodo-rol').textContent.trim();
+                nodo.setAttribute('aria-label', `Observar a ${nombre}, ${rol}`);
+                nodo.addEventListener('click', () => abrirTelescopio(i));
+                return { nombre, rol, foto: nodo.dataset.foto };
+            });
+            actualizarBotonVoz();
+        }
+
+        // Traza las líneas de la constelación la primera vez que la sección entra en pantalla
+        function animarConstelacion() {
+            const constelacion = document.getElementById('constelacion');
+            const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            if (sinMovimiento || !('IntersectionObserver' in window)) return;
+            constelacion.classList.add('preparada');
+            const observador = new IntersectionObserver((entradas) => {
+                if (entradas[0].isIntersecting) {
+                    constelacion.classList.add('visible');
+                    constelacion.classList.remove('preparada');
+                    observador.disconnect();
+                }
+            }, { threshold: 0.25 });
+            observador.observe(constelacion);
+        }
+
+        /* ===================== TELESCOPIO 3D ===================== */
+        // Partes del refractor: la descripción se muestra al elegir cada una en la lista
+        const PARTES_TELESCOPIO = [
+            { id: 'objetivo', vista: -60, nombre: 'Objetivo', texto: 'Es la lente grande del frente y capta la luz. Su diámetro, llamado apertura, decide cuánta luz reúne: a mayor apertura, vemos objetos más débiles y con más detalle.' },
+            { id: 'parasol', vista: -30, nombre: 'Parasol', texto: 'Extensión del tubo delante de la lente. Bloquea luces laterales y retrasa el rocío sobre el vidrio, algo muy útil en las noches húmedas de Urabá.' },
+            { id: 'tubo', vista: 20, nombre: 'Tubo óptico', texto: 'Mantiene el objetivo y el ocular alineados a la distancia exacta, la distancia focal. Por dentro es negro mate para que no haya reflejos.' },
+            { id: 'buscador', vista: 15, nombre: 'Buscador', texto: 'Pequeño telescopio auxiliar con poco aumento y una cruz de mira. Primero apuntamos con él al objeto y luego lo vemos en el tubo principal.' },
+            { id: 'enfocador', vista: 140, nombre: 'Enfocador', texto: 'Mecanismo con perillas que acerca o aleja el ocular hasta que la imagen se ve nítida.' },
+            { id: 'ocular', vista: 150, nombre: 'Diagonal y ocular', texto: 'La diagonal desvía la luz 90° para mirar cómodos hacia arriba. El ocular es la lente por donde miramos y se puede cambiar. Aumento = distancia focal del telescopio ÷ distancia focal del ocular. Por ejemplo, 700 mm ÷ 10 mm = 70 aumentos.' },
+            { id: 'montura', vista: 30, nombre: 'Montura', texto: 'Sostiene el tubo y lo deja mover arriba-abajo (altura) y a los lados (azimut) para seguir a los astros mientras cruzan el cielo.' },
+            { id: 'tripode', vista: 30, nombre: 'Trípode', texto: 'Tres patas ajustables que dan estabilidad. Con aumento, cualquier vibración se nota mucho, por eso debe quedar firme y nivelado.' }
+        ];
+
+        // Crea un cilindro 3D con caras planas alrededor del eje X; el sombreado simula una luz fija arriba
+        function crearCilindro({ radio, largo, caras = 20, h, s, l, parte, tapaFrente, tapaAtras }) {
+            const pieza = document.createElement('div');
+            if (parte) pieza.dataset.parte = parte;
+            const anchoCara = Math.ceil((2 * Math.PI * radio) / caras) + 1;
+            for (let i = 0; i < caras; i++) {
+                const angulo = (360 / caras) * i;
+                const luz = Math.cos(((angulo - 60) * Math.PI) / 180);
+                const cara = document.createElement('div');
+                cara.className = 'cara';
+                cara.style.width = `${largo}px`;
+                cara.style.height = `${anchoCara}px`;
+                cara.style.left = `${-largo / 2}px`;
+                cara.style.top = `${-anchoCara / 2}px`;
+                cara.style.background = `hsl(${h}, ${s}%, ${Math.max(6, l + luz * 16)}%)`;
+                cara.style.transform = `rotateX(${angulo}deg) translateZ(${radio}px)`;
+                pieza.appendChild(cara);
+            }
+            // Tapas de los extremos (+X frente, -X atrás)
+            [[1, tapaFrente], [-1, tapaAtras]].forEach(([lado, fondo]) => {
+                const tapa = document.createElement('div');
+                tapa.className = 'tapa';
+                tapa.style.width = tapa.style.height = `${radio * 2}px`;
+                tapa.style.left = tapa.style.top = `${-radio}px`;
+                tapa.style.background = fondo || `hsl(${h}, ${s}%, ${Math.max(6, l - 8)}%)`;
+                tapa.style.transform = `rotateY(${lado * 90}deg) translateZ(${largo / 2}px)`;
+                pieza.appendChild(tapa);
+            });
+            return pieza;
+        }
+
+        // Crea una caja 3D (montura, patas del trípode, soportes)
+        function crearCaja({ ancho, alto, fondo, h, s, l, parte }) {
+            const pieza = document.createElement('div');
+            if (parte) pieza.dataset.parte = parte;
+            const caras = [
+                { w: ancho, hgt: alto, t: `translateZ(${fondo / 2}px)`, luz: 4 },
+                { w: ancho, hgt: alto, t: `rotateY(180deg) translateZ(${fondo / 2}px)`, luz: -10 },
+                { w: fondo, hgt: alto, t: `rotateY(90deg) translateZ(${ancho / 2}px)`, luz: -4 },
+                { w: fondo, hgt: alto, t: `rotateY(-90deg) translateZ(${ancho / 2}px)`, luz: 0 },
+                { w: ancho, hgt: fondo, t: `rotateX(90deg) translateZ(${alto / 2}px)`, luz: 12 },
+                { w: ancho, hgt: fondo, t: `rotateX(-90deg) translateZ(${alto / 2}px)`, luz: -14 }
+            ];
+            caras.forEach(c => {
+                const cara = document.createElement('div');
+                cara.className = 'cara';
+                cara.style.width = `${c.w}px`;
+                cara.style.height = `${c.hgt}px`;
+                cara.style.left = `${-c.w / 2}px`;
+                cara.style.top = `${-c.hgt / 2}px`;
+                cara.style.background = `hsl(${h}, ${s}%, ${Math.max(5, l + c.luz)}%)`;
+                cara.style.transform = c.t;
+                pieza.appendChild(cara);
+            });
+            return pieza;
+        }
+
+        // Posiciona una pieza dentro de su grupo
+        function ubicar(pieza, transformacion) {
+            pieza.style.transform = transformacion;
+            return pieza;
+        }
+
+        function construirTelescopio() {
+            const modelo = document.getElementById('modelo3d');
+            const lente = 'radial-gradient(circle at 38% 35%, rgba(190, 240, 255, 0.95) 0%, rgba(60, 140, 200, 0.9) 35%, rgba(10, 30, 70, 0.95) 75%, #0a0f1f 100%)';
+
+            // Tubo óptico inclinado hacia el cielo, apoyado sobre la montura
+            const tubo = document.createElement('div');
+            tubo.style.transform = 'translateY(-52px) rotateZ(-28deg)';
+            tubo.appendChild(crearCilindro({ radio: 32, largo: 300, caras: 24, h: 222, s: 45, l: 30, parte: 'tubo' }));
+            tubo.appendChild(ubicar(crearCilindro({ radio: 35, largo: 10, caras: 24, h: 42, s: 75, l: 50, parte: 'tubo' }), 'translateX(150px)'));
+            tubo.appendChild(ubicar(crearCilindro({ radio: 35, largo: 10, caras: 24, h: 42, s: 75, l: 50, parte: 'tubo' }), 'translateX(-40px)'));
+            tubo.appendChild(ubicar(crearCilindro({ radio: 39, largo: 80, caras: 24, h: 222, s: 30, l: 16, parte: 'parasol', tapaFrente: 'transparent' }), 'translateX(195px)'));
+            // Lente del objetivo, al fondo del parasol
+            const objetivo = document.createElement('div');
+            objetivo.dataset.parte = 'objetivo';
+            const vidrio = document.createElement('div');
+            vidrio.className = 'tapa';
+            vidrio.style.width = vidrio.style.height = '66px';
+            vidrio.style.left = vidrio.style.top = '-33px';
+            vidrio.style.background = lente;
+            vidrio.style.transform = 'rotateY(90deg)';
+            objetivo.appendChild(vidrio);
+            tubo.appendChild(ubicar(objetivo, 'translateX(157px)'));
+            // Enfocador, diagonal y ocular en la parte trasera
+            tubo.appendChild(ubicar(crearCilindro({ radio: 17, largo: 60, caras: 16, h: 220, s: 8, l: 62, parte: 'enfocador' }), 'translateX(-180px)'));
+            tubo.appendChild(ubicar(crearCaja({ ancho: 14, alto: 16, fondo: 16, h: 42, s: 70, l: 48, parte: 'enfocador' }), 'translateX(-175px) translateY(24px)'));
+            tubo.appendChild(ubicar(crearCilindro({ radio: 13, largo: 34, caras: 12, h: 0, s: 0, l: 20, parte: 'ocular' }), 'translateX(-225px)'));
+            tubo.appendChild(ubicar(crearCilindro({ radio: 10, largo: 46, caras: 12, h: 0, s: 0, l: 14, parte: 'ocular', tapaAtras: lente, tapaFrente: lente }), 'translateX(-238px) translateY(-30px) rotateZ(90deg)'));
+            // Buscador sobre el tubo con sus dos soportes
+            tubo.appendChild(ubicar(crearCilindro({ radio: 9, largo: 110, caras: 12, h: 220, s: 10, l: 70, parte: 'buscador', tapaFrente: lente }), 'translateX(30px) translateY(-56px)'));
+            tubo.appendChild(ubicar(crearCaja({ ancho: 8, alto: 22, fondo: 8, h: 0, s: 0, l: 18, parte: 'buscador' }), 'translateX(0px) translateY(-40px)'));
+            tubo.appendChild(ubicar(crearCaja({ ancho: 8, alto: 22, fondo: 8, h: 0, s: 0, l: 18, parte: 'buscador' }), 'translateX(60px) translateY(-40px)'));
+            modelo.appendChild(tubo);
+
+            // Montura altazimutal: horquilla y eje
+            modelo.appendChild(ubicar(crearCaja({ ancho: 40, alto: 64, fondo: 44, h: 222, s: 20, l: 24, parte: 'montura' }), 'translateY(0px)'));
+            modelo.appendChild(ubicar(crearCilindro({ radio: 9, largo: 70, caras: 12, h: 42, s: 70, l: 45, parte: 'montura' }), 'translateY(-30px) rotateY(90deg)'));
+            modelo.appendChild(ubicar(crearCaja({ ancho: 70, alto: 10, fondo: 70, h: 222, s: 20, l: 20, parte: 'montura' }), 'translateY(36px)'));
+
+            // Trípode: tres patas separadas 120° y abiertas hacia afuera
+            [0, 120, 240].forEach(angulo => {
+                const soporte = document.createElement('div');
+                soporte.style.transform = `translateY(40px) rotateY(${angulo}deg) rotateZ(-20deg)`;
+                soporte.appendChild(ubicar(crearCaja({ ancho: 10, alto: 230, fondo: 12, h: 30, s: 25, l: 32, parte: 'tripode' }), 'translateY(115px)'));
+                soporte.appendChild(ubicar(crearCaja({ ancho: 14, alto: 16, fondo: 16, h: 0, s: 0, l: 12, parte: 'tripode' }), 'translateY(232px)'));
+                modelo.appendChild(soporte);
+            });
+            // Bandeja de accesorios que une las patas
+            modelo.appendChild(ubicar(crearCaja({ ancho: 90, alto: 4, fondo: 90, h: 222, s: 15, l: 22, parte: 'tripode' }), 'translateY(150px) rotateY(45deg)'));
+        }
+
+        function seleccionarParte(id) {
+            const parte = PARTES_TELESCOPIO.find(p => p.id === id);
+            document.getElementById('detalle-titulo').textContent = parte.nombre;
+            document.getElementById('detalle-texto').textContent = parte.texto;
+            document.querySelectorAll('#lista-partes button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.parte === id)));
+            document.querySelectorAll('#modelo3d [data-parte]').forEach(p => p.classList.toggle('resaltado', p.dataset.parte === id));
+            // Gira el modelo por el camino más corto para que la pieza elegida quede a la vista
+            const actual = ((giroTelescopio % 360) + 360) % 360;
+            let diferencia = parte.vista - actual;
+            diferencia = ((diferencia + 540) % 360) - 180;
+            giroDestino = giroTelescopio + diferencia;
+            if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) { giroTelescopio = giroDestino; giroDestino = null; aplicarGiro(); }
+        }
+
+        function prepararListaPartes() {
+            const lista = document.getElementById('lista-partes');
+            PARTES_TELESCOPIO.forEach(parte => {
+                const item = document.createElement('li');
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.textContent = parte.nombre;
+                boton.dataset.parte = parte.id;
+                boton.addEventListener('click', () => seleccionarParte(parte.id));
+                item.appendChild(boton);
+                lista.appendChild(item);
+            });
+            seleccionarParte('objetivo');
+        }
+
+        // Giro del modelo: automático y lento; se puede arrastrar con mouse/dedo o usar flechas
+        let giroTelescopio = 30;
+        let giroDestino = null;
+        let aplicarGiro = () => {};
+
+        function activarGiroTelescopio() {
+            const escenario = document.getElementById('escenario3d');
+            const modelo = document.getElementById('modelo3d');
+            const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let arrastrando = false;
+            let ultimoX = 0;
+            let pausaHasta = 0;
+            const aplicar = () => modelo.style.setProperty('--giro', `${giroTelescopio}deg`);
+            aplicarGiro = aplicar;
+
+            escenario.addEventListener('pointerdown', (e) => {
+                arrastrando = true;
+                giroDestino = null;
+                ultimoX = e.clientX;
+                escenario.setPointerCapture(e.pointerId);
+            });
+            escenario.addEventListener('pointermove', (e) => {
+                if (!arrastrando) return;
+                giroTelescopio += (e.clientX - ultimoX) * 0.6;
+                ultimoX = e.clientX;
+                aplicar();
+            });
+            const soltar = () => { arrastrando = false; pausaHasta = performance.now() + 3000; };
+            escenario.addEventListener('pointerup', soltar);
+            escenario.addEventListener('pointercancel', soltar);
+            escenario.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    giroDestino = null;
+                    giroTelescopio += e.key === 'ArrowLeft' ? -15 : 15;
+                    pausaHasta = performance.now() + 3000;
+                    aplicar();
+                }
+            });
+
+            function girar(ahora) {
+                if (giroDestino !== null) {
+                    // Acercamiento suave hacia la vista de la pieza elegida; luego se queda quieto unos segundos
+                    giroTelescopio += (giroDestino - giroTelescopio) * 0.08;
+                    if (Math.abs(giroDestino - giroTelescopio) < 0.3) { giroTelescopio = giroDestino; giroDestino = null; pausaHasta = ahora + 5000; }
+                    aplicar();
+                } else if (!arrastrando && ahora > pausaHasta) { giroTelescopio += 0.15; aplicar(); }
+                requestAnimationFrame(girar);
+            }
+            aplicar();
+            if (!sinMovimiento) requestAnimationFrame(girar);
+        }
+
+        /* ===================== CIELO PROFUNDO ===================== */
+        // Cada objeto define los tres colores de la nebulosa y datos reales para observarlo desde Turbo (8° N)
+        const TEMAS_CIELO = [
+            { id: 'orion', boton: 'Orión', nombre: 'Nebulosa de Orión (M42)', c1: '#ff4fa3', c2: '#7b3ff2', c3: '#2bb6ff',
+              foto: 'img-cielo/orion-m42.jpg', credito: 'NASA, ESA y M. Robberto (Hubble). Dominio público.', fuente: 'https://commons.wikimedia.org/wiki/File:Orion_Nebula_-_Hubble_2006_mosaic_18000.jpg',
+              texto: 'Una guardería de estrellas a unos 1.344 años luz. Se ve a simple vista como una mancha difusa debajo del cinturón de Orión.',
+              cuando: 'de diciembre a marzo, en las primeras horas de la noche.' },
+            { id: 'vialactea', boton: 'Vía Láctea', nombre: 'Vía Láctea', c1: '#f2c46d', c2: '#3b5bdb', c3: '#c9d6ff',
+              foto: 'img-cielo/via-lactea.jpg', credito: 'ESO/S. Brunier. Licencia CC BY 4.0.', fuente: 'https://commons.wikimedia.org/wiki/File:ESO_-_Milky_Way.jpg',
+              texto: 'Nuestra galaxia: un disco de más de 100.000 años luz con cientos de miles de millones de estrellas. Su centro queda en dirección a Sagitario.',
+              cuando: 'de junio a agosto, lejos de las luces del pueblo.' },
+            { id: 'carina', boton: 'Carina', nombre: 'Nebulosa de Carina (NGC 3372)', c1: '#ff8a3d', c2: '#1fb5a8', c3: '#b05ce0',
+              foto: 'img-cielo/carina.jpg', credito: 'ESO. Licencia CC BY 4.0.', fuente: 'https://commons.wikimedia.org/wiki/File:Carina_Nebula_by_ESO.jpg',
+              texto: 'Una de las nebulosas más grandes del cielo, a unos 7.500 años luz. En su interior está Eta Carinae, una estrella gigante e inestable.',
+              cuando: 'de febrero a mayo, baja sobre el horizonte sur. Por estar cerca del ecuador, desde Turbo sí se alcanza a ver.' },
+            { id: 'pleyades', boton: 'Pléyades', nombre: 'Las Pléyades (M45)', c1: '#7fb8ff', c2: '#2d4fd6', c3: '#d9ecff',
+              foto: 'img-cielo/pleyades.jpg', credito: 'NASA, ESA, AURA/Caltech y Observatorio Palomar. Dominio público.', fuente: 'https://commons.wikimedia.org/wiki/File:Pleiades_large.jpg',
+              texto: 'Un cúmulo de estrellas jóvenes y azules a unos 444 años luz. A simple vista se cuentan seis o siete; con el telescopio, decenas.',
+              cuando: 'de noviembre a febrero, en la constelación de Tauro.' }
+        ];
+
+        function aplicarTemaCielo(id) {
+            const tema = TEMAS_CIELO.find(t => t.id === id);
+            const seccion = document.getElementById('cielo-profundo');
+            seccion.style.setProperty('--c1', tema.c1);
+            seccion.style.setProperty('--c2', tema.c2);
+            seccion.style.setProperty('--c3', tema.c3);
+            document.getElementById('cielo-nombre').textContent = tema.nombre;
+            document.getElementById('cielo-texto').textContent = tema.texto;
+            document.getElementById('cielo-cuando').textContent = tema.cuando;
+            // Foto real del objeto: se desvanece, cambia y vuelve a aparecer
+            const foto = document.getElementById('cielo-foto');
+            foto.classList.add('cambiando');
+            const nueva = new Image();
+            nueva.onload = nueva.onerror = () => {
+                foto.src = tema.foto;
+                foto.alt = `Foto real: ${tema.nombre}`;
+                foto.classList.remove('cambiando');
+            };
+            nueva.src = tema.foto;
+            const credito = document.getElementById('cielo-credito');
+            credito.textContent = `Foto: ${tema.credito} `;
+            const enlace = document.createElement('a');
+            enlace.href = tema.fuente;
+            enlace.target = '_blank';
+            enlace.rel = 'noopener';
+            enlace.textContent = 'Ver fuente';
+            credito.appendChild(enlace);
+            // Muestra solo la figura ilustrada del objeto elegido
+            document.querySelectorAll('#figura-cielo .figura').forEach(f => f.classList.toggle('activa', f.dataset.figura === id));
+            document.getElementById('figura-cielo').setAttribute('aria-label', `Ilustración: ${tema.nombre}`);
+            document.querySelectorAll('#temas-cielo button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.tema === id)));
+        }
+
+        function prepararCieloProfundo() {
+            const contenedor = document.getElementById('temas-cielo');
+            TEMAS_CIELO.forEach(tema => {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.dataset.tema = tema.id;
+                const miniatura = document.createElement('img');
+                miniatura.className = 'miniatura-objeto';
+                miniatura.src = tema.foto;
+                miniatura.alt = '';
+                miniatura.style.setProperty('--anillo', tema.c1);
+                boton.append(miniatura, tema.boton);
+                boton.addEventListener('click', () => aplicarTemaCielo(tema.id));
+                contenedor.appendChild(boton);
+            });
+            aplicarTemaCielo('orion');
+        }
+
+        function abrirTelescopio(indice) {
+            if (!integrantes.length) return;
+            document.getElementById('visor-telescopio').classList.add('abierto');
+            mostrarIntegrante(indice);
+        }
+
+        function cerrarTelescopio() {
+            document.getElementById('visor-telescopio').classList.remove('abierto');
+            clearTimeout(temporizadorEnfoque);
+            if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+        }
+
+        function moverTelescopio(paso) {
+            mostrarIntegrante((indiceActual + paso + integrantes.length) % integrantes.length);
+        }
+
+        function mostrarIntegrante(indice) {
+            indiceActual = indice;
+            const persona = integrantes[indice];
+            const imagen = document.getElementById('ocular-imagen');
+            const estado = document.getElementById('ocular-estado');
+            const nombre = document.getElementById('ocular-nombre');
+            const rol = document.getElementById('ocular-rol');
+
+            clearTimeout(temporizadorEnfoque);
+            estado.textContent = 'Enfocando…';
+            nombre.textContent = '';
+            rol.textContent = '';
+
+            // Reinicia la animación de enfoque en cada integrante
+            imagen.classList.remove('enfocando');
+            void imagen.offsetWidth;
+            imagen.src = persona.foto;
+            imagen.alt = `${persona.nombre}, ${persona.rol}`;
+            imagen.classList.add('enfocando');
+
+            // Al terminar de enfocar se revela y se menciona al integrante
+            temporizadorEnfoque = setTimeout(() => {
+                estado.textContent = `Objetivo ${indice + 1} de ${integrantes.length} · En foco`;
+                nombre.textContent = persona.nombre;
+                rol.textContent = persona.rol;
+                anunciar(`Observando a ${persona.nombre}. ${persona.rol}.`);
+            }, 900);
+        }
+
+        // Menciona en voz alta al integrante usando la voz en español del navegador
+        function anunciar(texto) {
+            if (!vozActiva || !('speechSynthesis' in window)) return;
+            window.speechSynthesis.cancel();
+            const mensaje = new SpeechSynthesisUtterance(texto);
+            mensaje.lang = 'es-ES';
+            const vozEspanol = window.speechSynthesis.getVoices().find(v => v.lang && v.lang.toLowerCase().startsWith('es'));
+            if (vozEspanol) mensaje.voice = vozEspanol;
+            mensaje.rate = 1;
+            window.speechSynthesis.speak(mensaje);
+        }
+
+        function alternarVoz() {
+            vozActiva = !vozActiva;
+            try { localStorage.setItem('observatorioVoz', vozActiva ? 'on' : 'off'); } catch (e) { /* sin almacenamiento: solo aplica en esta visita */ }
+            if (!vozActiva && 'speechSynthesis' in window) window.speechSynthesis.cancel();
+            actualizarBotonVoz();
+        }
+
+        function actualizarBotonVoz() {
+            const boton = document.getElementById('btn-voz');
+            if (!('speechSynthesis' in window)) { boton.style.display = 'none'; return; }
+            boton.textContent = vozActiva ? '🔊 Voz activada' : '🔇 Voz desactivada';
+            boton.setAttribute('aria-pressed', String(vozActiva));
+        }
+
+        // Teclado: Esc cierra visores, flechas recorren a los integrantes
+        document.addEventListener('keydown', (e) => {
+            const telescopioAbierto = document.getElementById('visor-telescopio').classList.contains('abierto');
+            if (e.key === 'Escape') { cerrarTelescopio(); cerrarLogo(); }
+            if (telescopioAbierto && e.key === 'ArrowRight') moverTelescopio(1);
+            if (telescopioAbierto && e.key === 'ArrowLeft') moverTelescopio(-1);
+        });
+
+        /* ===================== CIELO ESTRELLADO ===================== */
+        function iniciarCielo() {
+            const canvas = document.getElementById('cielo-estrellado');
+            const ctx = canvas.getContext('2d');
+            const sinMovimiento = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            let estrellas = [];
+            let fugaz = null;
+            let ancho = 0, alto = 0;
+
+            function crearEstrellas() {
+                const escala = window.devicePixelRatio || 1;
+                ancho = window.innerWidth;
+                alto = window.innerHeight;
+                canvas.width = ancho * escala;
+                canvas.height = alto * escala;
+                ctx.setTransform(escala, 0, 0, escala, 0, 0);
+                // Densidad proporcional al tamaño de la pantalla
+                const cantidad = Math.floor((ancho * alto) / 3500);
+                const colores = ['255,255,255', '200,230,255', '255,240,200', '102,252,241'];
+                estrellas = Array.from({ length: cantidad }, () => ({
+                    x: Math.random() * ancho,
+                    y: Math.random() * alto,
+                    radio: Math.random() * 1.4 + 0.2,
+                    fase: Math.random() * Math.PI * 2,
+                    velocidad: Math.random() * 0.02 + 0.005,
+                    deriva: Math.random() * 0.05 + 0.01,
+                    color: colores[Math.random() < 0.85 ? 0 : Math.floor(Math.random() * colores.length)]
+                }));
+            }
+
+            function dibujar() {
+                ctx.clearRect(0, 0, ancho, alto);
+                for (const s of estrellas) {
+                    if (!sinMovimiento) {
+                        s.fase += s.velocidad;
+                        s.x -= s.deriva;
+                        if (s.x < 0) s.x = ancho;
+                    }
+                    const brillo = 0.45 + Math.sin(s.fase) * 0.4;
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.radio, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(${s.color},${brillo})`;
+                    ctx.fill();
+                }
+                // Estrella fugaz ocasional
+                if (!sinMovimiento) {
+                    if (!fugaz && Math.random() < 0.004) {
+                        fugaz = { x: Math.random() * ancho * 0.8 + ancho * 0.2, y: Math.random() * alto * 0.4, vida: 1 };
+                    }
+                    if (fugaz) {
+                        const cola = ctx.createLinearGradient(fugaz.x, fugaz.y, fugaz.x + 90, fugaz.y - 45);
+                        cola.addColorStop(0, `rgba(255,255,255,${fugaz.vida})`);
+                        cola.addColorStop(1, 'rgba(255,255,255,0)');
+                        ctx.strokeStyle = cola;
+                        ctx.lineWidth = 2;
+                        ctx.beginPath();
+                        ctx.moveTo(fugaz.x, fugaz.y);
+                        ctx.lineTo(fugaz.x + 90, fugaz.y - 45);
+                        ctx.stroke();
+                        fugaz.x -= 9;
+                        fugaz.y += 4.5;
+                        fugaz.vida -= 0.02;
+                        if (fugaz.vida <= 0) fugaz = null;
+                    }
+                    requestAnimationFrame(dibujar);
+                }
+            }
+
+            crearEstrellas();
+            dibujar();
+            window.addEventListener('resize', () => { crearEstrellas(); if (sinMovimiento) dibujar(); });
+        }
+
+        /* ===================== GUÍA DE ARMADO ===================== */
+        // Pasos para armar distintos telescopios. En el refractor, cada paso resalta su pieza en el modelo 3D.
+        const GUIAS_ARMADO = [
+            {
+                id: 'refractor', nombre: 'Refractor (montura altazimutal)',
+                pasos: [
+                    { titulo: 'Abre y ajusta el trípode', parte: 'tripode',
+                      texto: 'Abre las tres patas del trípode sobre un suelo firme y plano. Ajusta la altura para que el ocular quede cómodo a la altura de tus ojos y aprieta las perillas de cada pata.',
+                      consejo: 'Evita la arena suelta o el pasto blando: cualquier vibración se nota mucho con aumento.' },
+                    { titulo: 'Coloca la bandeja de accesorios', parte: 'tripode',
+                      texto: 'Fija la bandeja entre las patas. Además de guardar los oculares, tensa las patas y le da rigidez al trípode.' },
+                    { titulo: 'Instala la montura', parte: 'montura',
+                      texto: 'Coloca la montura altazimutal sobre la cabeza del trípode y aprieta su tornillo. Comprueba que se mueve suave arriba-abajo (altura) y a los lados (azimut).' },
+                    { titulo: 'Monta el tubo óptico', parte: 'tubo',
+                      texto: 'Apoya el tubo en la montura con el objetivo (la lente grande) hacia adelante y aprieta los tornillos o la abrazadera.',
+                      consejo: 'Sostén el tubo con una mano hasta que quede bien sujeto; si se cae, la lente se puede desalinear o romper.' },
+                    { titulo: 'Coloca el buscador', parte: 'buscador',
+                      texto: 'Desliza el buscador en su soporte sobre el tubo, con su lente mirando hacia el mismo lado que el objetivo, y aprieta el tornillo.' },
+                    { titulo: 'Inserta la diagonal y el ocular', parte: 'ocular',
+                      texto: 'Mete la diagonal en el enfocador y luego el ocular de mayor distancia focal (por ejemplo 25 mm), que da menos aumento y un campo más amplio para empezar. Aprieta los tornillos sin forzar.' },
+                    { titulo: 'Alinea el buscador de día', parte: 'buscador',
+                      texto: 'Apunta a un objeto lejano y fijo, como una antena o un árbol a más de 500 metros. Céntralo en el ocular y luego mueve los tornillos del buscador hasta que su cruz quede sobre el mismo objeto.',
+                      consejo: 'Hazlo de día: de noche es mucho más difícil encontrar un objeto con el buscador desalineado. Nunca uses el Sol como objetivo.' },
+                    { titulo: 'Enfoca y observa', parte: 'enfocador',
+                      texto: 'Quita la tapa del objetivo, apunta con el buscador y gira despacio las perillas del enfocador hasta ver la imagen nítida. La Luna es el mejor primer objetivo.',
+                      consejo: 'Para más aumento, cambia a un ocular de menor distancia focal (10 mm) cuando ya tengas el objeto centrado.' }
+                ]
+            },
+            {
+                id: 'dobson', nombre: 'Reflector newtoniano (Dobson)',
+                pasos: [
+                    { titulo: 'Arma la base Dobson',
+                      texto: 'Une los paneles laterales a la base con los tornillos del kit, siguiendo el manual. Queda una caja en forma de U que gira sobre el suelo.',
+                      consejo: 'Aprieta los tornillos en cruz y de forma pareja para que la base no quede torcida.' },
+                    { titulo: 'Coloca el tubo en la base',
+                      texto: 'Apoya los ejes laterales del tubo (muñones) en las ranuras de la base. El espejo principal queda abajo y la boca del tubo arriba.',
+                      consejo: 'El tubo es pesado y el espejo es delicado: levántalo entre dos personas.' },
+                    { titulo: 'Instala el buscador',
+                      texto: 'Coloca el buscador o el buscador de punto rojo en su soporte, cerca de la boca del tubo.' },
+                    { titulo: 'Pon el ocular',
+                      texto: 'En este telescopio el enfocador está al lado del tubo, cerca de la boca. Inserta ahí el ocular de menor aumento (25 mm) y aprieta el tornillo.' },
+                    { titulo: 'Revisa la colimación',
+                      texto: 'Mira por el enfocador sin ocular (o con un tapón de colimación): los espejos deben verse centrados unos dentro de otros. Si no, gira poco a poco los tornillos del espejo principal, en la parte trasera del tubo.',
+                      consejo: 'Haz ajustes pequeños de un tornillo a la vez y vuelve a mirar después de cada cambio.' },
+                    { titulo: 'Deja que se aclimate',
+                      texto: 'Saca el telescopio al aire libre de 30 a 45 minutos antes de observar. Así el espejo toma la temperatura del aire y la imagen deja de temblar.' },
+                    { titulo: 'Alinea el buscador y observa',
+                      texto: 'Alinea el buscador de día con un objeto lejano, igual que en el refractor. De noche, empuja el tubo con suavidad para seguir a los astros mientras cruzan el cielo.' }
+                ]
+            },
+            {
+                id: 'ecuatorial', nombre: 'Montura ecuatorial',
+                pasos: [
+                    { titulo: 'Arma y nivela el trípode',
+                      texto: 'Abre el trípode, ajusta la altura y usa la burbuja de nivel (si la tiene) para dejar la cabeza horizontal.' },
+                    { titulo: 'Orienta la montura al norte',
+                      texto: 'Coloca la cabeza ecuatorial y gira el trípode para que la pata o la marca "N" apunte hacia el norte geográfico. Puedes usar la brújula del celular.' },
+                    { titulo: 'Ajusta la latitud de Turbo',
+                      texto: 'Turbo está a unos 8° de latitud norte. Mueve el tornillo de latitud hasta que la escala de la montura marque 8°.',
+                      consejo: 'Si viajas a otra ciudad, cambia este valor por la latitud de ese lugar.' },
+                    { titulo: 'Instala los contrapesos',
+                      texto: 'Enrosca la barra de contrapeso, pasa el contrapeso y pon el tornillo de seguridad en la punta de la barra.',
+                      consejo: 'El tornillo de seguridad evita que el contrapeso se deslice y caiga sobre un pie.' },
+                    { titulo: 'Monta el tubo óptico',
+                      texto: 'Fija el tubo en las abrazaderas o en la placa tipo cola de milano y aprieta bien.' },
+                    { titulo: 'Balancea el telescopio',
+                      texto: 'Suelta el freno de ascensión recta y mueve el contrapeso hasta que el tubo quede quieto en horizontal. Luego suelta el freno de declinación y desliza el tubo en las abrazaderas hasta que tampoco se incline solo.',
+                      consejo: 'Un telescopio balanceado se mueve suave y los motores o perillas no se fuerzan.' },
+                    { titulo: 'Coloca buscador y ocular',
+                      texto: 'Pon el buscador y un ocular de bajo aumento. Alinea el buscador de día con un objeto lejano.' },
+                    { titulo: 'Haz la alineación polar',
+                      texto: 'De noche, apunta el eje polar de la montura hacia la estrella Polar. Desde Turbo se ve muy baja, a unos 8° sobre el horizonte norte. Así el telescopio sigue a las estrellas moviendo un solo eje.',
+                      consejo: 'Si árboles o edificios tapan el horizonte norte, basta con apuntar el eje polar al norte con la brújula para observaciones sencillas.' }
+                ]
+            }
+        ];
+        let guiaActual = GUIAS_ARMADO[0];
+        let pasoActual = 0;
+        let avanceGuias = {};
+        try { avanceGuias = JSON.parse(localStorage.getItem('guiasObservatorio')) || {}; } catch (e) { avanceGuias = {}; }
+
+        function guardarAvance() {
+            try { localStorage.setItem('guiasObservatorio', JSON.stringify(avanceGuias)); } catch (e) { /* sin almacenamiento: el avance dura solo esta visita */ }
+        }
+
+        function prepararGuias() {
+            const pestanas = document.getElementById('pestanas-guia');
+            GUIAS_ARMADO.forEach(guia => {
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                boton.setAttribute('role', 'tab');
+                boton.dataset.guia = guia.id;
+                boton.textContent = guia.nombre;
+                boton.addEventListener('click', () => seleccionarGuia(guia.id, true));
+                pestanas.appendChild(boton);
+            });
+            seleccionarGuia(GUIAS_ARMADO[0].id, false);
+        }
+
+        function seleccionarGuia(id, porUsuario) {
+            guiaActual = GUIAS_ARMADO.find(g => g.id === id);
+            pasoActual = 0;
+            document.querySelectorAll('#pestanas-guia button').forEach(b => b.setAttribute('aria-selected', String(b.dataset.guia === id)));
+            const indice = document.getElementById('indice-pasos');
+            indice.innerHTML = '';
+            guiaActual.pasos.forEach((paso, i) => {
+                const item = document.createElement('li');
+                const boton = document.createElement('button');
+                boton.type = 'button';
+                const numero = document.createElement('span');
+                numero.className = 'numero-paso';
+                numero.textContent = String(i + 1);
+                boton.append(numero, paso.titulo);
+                boton.addEventListener('click', () => irAPaso(i, true));
+                item.appendChild(boton);
+                indice.appendChild(item);
+            });
+            irAPaso(0, porUsuario);
+        }
+
+        function irAPaso(indice, porUsuario) {
+            pasoActual = indice;
+            const paso = guiaActual.pasos[indice];
+            const hechos = avanceGuias[guiaActual.id] || [];
+            document.getElementById('contador-paso').textContent = `Paso ${indice + 1} de ${guiaActual.pasos.length}`;
+            document.getElementById('titulo-paso').textContent = paso.titulo;
+            document.getElementById('texto-paso').textContent = paso.texto;
+            const consejo = document.getElementById('consejo-paso');
+            consejo.hidden = !paso.consejo;
+            consejo.textContent = paso.consejo ? `💡 ${paso.consejo}` : '';
+            document.getElementById('check-paso').checked = hechos.includes(indice);
+            document.getElementById('btn-paso-anterior').disabled = indice === 0;
+            document.getElementById('btn-paso-siguiente').disabled = indice === guiaActual.pasos.length - 1;
+            document.querySelectorAll('#indice-pasos li').forEach((li, i) => {
+                const boton = li.querySelector('button');
+                boton.classList.toggle('hecho', hechos.includes(i));
+                if (i === indice) boton.setAttribute('aria-current', 'step'); else boton.removeAttribute('aria-current');
+            });
+            document.getElementById('barra-avance-guia').style.width = `${Math.round((hechos.length / guiaActual.pasos.length) * 100)}%`;
+            // En el refractor, el modelo 3D gira y resalta la pieza de este paso
+            if (porUsuario && paso.parte) seleccionarParte(paso.parte);
+        }
+
+        function moverPaso(direccion) {
+            const destino = pasoActual + direccion;
+            if (destino >= 0 && destino < guiaActual.pasos.length) irAPaso(destino, true);
+        }
+
+        function marcarPaso(hecho) {
+            const hechos = new Set(avanceGuias[guiaActual.id] || []);
+            if (hecho) hechos.add(pasoActual); else hechos.delete(pasoActual);
+            avanceGuias[guiaActual.id] = Array.from(hechos);
+            guardarAvance();
+            irAPaso(pasoActual, false);
+        }
+
+        /* ===================== CÓDIGO QR DE LA HISTORIA ===================== */
+        // El QR apunta a la dirección real donde está publicada la página (tu dominio de Hostinger)
+        function generarQR() {
+            const lienzo = document.getElementById('lienzo-qr');
+            const aviso = document.getElementById('qr-no-disponible');
+            const destino = new URL('historia-telescopio.html', location.href).href;
+            const noDisponible = (mensaje) => {
+                lienzo.hidden = true;
+                aviso.hidden = false;
+                if (mensaje) aviso.textContent = mensaje;
+                document.getElementById('btn-descargar-qr').disabled = true;
+            };
+            if (location.protocol === 'file:') { noDisponible(); return; }
+            if (typeof qrcode !== 'function') { noDisponible('No se pudo cargar el generador del código QR. Revisa que la carpeta js/ esté subida al servidor.'); return; }
+            const codigo = qrcode(0, 'M');
+            codigo.addData(destino);
+            codigo.make();
+            // Margen de 4 módulos alrededor, como pide el estándar para que el celular lo lea bien
+            const modulos = codigo.getModuleCount();
+            const margen = 4;
+            const celda = Math.floor(1000 / (modulos + margen * 2));
+            const tamano = celda * (modulos + margen * 2);
+            lienzo.width = tamano;
+            lienzo.height = tamano;
+            const ctx = lienzo.getContext('2d');
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, tamano, tamano);
+            ctx.fillStyle = '#0b0c10';
+            for (let fila = 0; fila < modulos; fila++) {
+                for (let col = 0; col < modulos; col++) {
+                    if (codigo.isDark(fila, col)) ctx.fillRect((col + margen) * celda, (fila + margen) * celda, celda, celda);
+                }
+            }
+            document.getElementById('url-qr').textContent = destino;
+        }
+
+        function descargarQR() {
+            const lienzo = document.getElementById('lienzo-qr');
+            lienzo.toBlob(archivo => {
+                const enlace = document.createElement('a');
+                enlace.href = URL.createObjectURL(archivo);
+                enlace.download = 'qr-historia-telescopio.png';
+                document.body.appendChild(enlace);
+                enlace.click();
+                enlace.remove();
+                setTimeout(() => URL.revokeObjectURL(enlace.href), 1000);
+            }, 'image/png');
+        }
+
+        /* ===================== CUENTAS DE COMPAÑEROS ===================== */
+        const API_CUENTAS = '/api/cuentas.php';
+        let cuentaActual = null;
+
+        function mostrarFormularioCuenta(cual) {
+            document.getElementById('form-ingresar').hidden = cual !== 'ingresar';
+            document.getElementById('form-registrar').hidden = cual !== 'registrar';
+            document.getElementById('pestana-ingresar').setAttribute('aria-selected', String(cual === 'ingresar'));
+            document.getElementById('pestana-registrar').setAttribute('aria-selected', String(cual === 'registrar'));
+        }
+
+        function alternarClave(id, boton) {
+            const campo = document.getElementById(id);
+            const visible = campo.type === 'text';
+            campo.type = visible ? 'password' : 'text';
+            boton.textContent = visible ? 'Mostrar' : 'Ocultar';
+        }
+
+        function estadoCuenta(formulario, texto, clase = '') {
+            const estado = document.getElementById(`estado-${formulario}`);
+            estado.textContent = texto;
+            estado.className = 'estado-cuenta' + (clase ? ' ' + clase : '');
+        }
+
+        // Sin servidor PHP (archivo abierto en el PC o publicación sin PHP) el registro no puede funcionar
+        function cuentasNoDisponibles() {
+            const aviso = document.getElementById('aviso-cuentas');
+            aviso.hidden = false;
+            aviso.textContent = location.protocol === 'file:'
+                ? '💻 Estás viendo la página desde tu PC. El registro de compañeros funciona cuando la página está publicada en Hostinger.'
+                : 'El registro no está disponible en esta versión de la página porque no tiene servidor.';
+            document.querySelectorAll('#tarjeta-cuenta input, #tarjeta-cuenta button').forEach(el => { el.disabled = true; });
+        }
+
+        async function consultarSesion() {
+            if (location.protocol === 'file:') { cuentasNoDisponibles(); return; }
+            try {
+                const respuesta = await fetch(API_CUENTAS, { cache: 'no-store', credentials: 'same-origin' });
+                const datos = await respuesta.json();
+                if (!respuesta.ok || !datos.ok) throw new Error();
+                actualizarVistaCuenta(datos.usuario, datos.miembros || []);
+            } catch (e) {
+                cuentasNoDisponibles();
+            }
+        }
+
+        function actualizarVistaCuenta(usuario, miembros) {
+            cuentaActual = usuario;
+            document.getElementById('bloque-acceso').hidden = !!usuario;
+            document.getElementById('bloque-sesion').hidden = !usuario;
+            document.getElementById('enlace-cuenta').textContent = usuario ? `👤 ${usuario.nombre.split(' ')[0]}` : 'Ingresar';
+            // En la bitácora, quien tiene sesión publica con su nombre verificado
+            document.getElementById('campo-autor').hidden = !!usuario;
+            const publicarComo = document.getElementById('publicar-como');
+            publicarComo.hidden = !usuario;
+            if (!usuario) return;
+            publicarComo.textContent = `Publicarás como ${usuario.nombre} ✔`;
+            document.getElementById('saludo-sesion').textContent = `Hola, ${usuario.nombre}`;
+            document.getElementById('usuario-sesion').textContent = `Usuario: ${usuario.usuario}`;
+            const lista = document.getElementById('lista-miembros');
+            lista.innerHTML = '';
+            miembros.forEach(miembro => {
+                const item = document.createElement('li');
+                const nombre = document.createElement('strong');
+                nombre.textContent = miembro.nombre;
+                const desde = document.createElement('span');
+                desde.textContent = `desde ${new Date(miembro.desde).toLocaleDateString('es-CO', { day: 'numeric', month: 'short', year: 'numeric' })}`;
+                item.append(nombre, desde);
+                lista.appendChild(item);
+            });
+        }
+
+        async function enviarCuenta(event, accion) {
+            event.preventDefault();
+            const cual = accion === 'iniciar' ? 'ingresar' : 'registrar';
+            const formulario = new FormData();
+            formulario.append('accion', accion);
+            if (accion === 'iniciar') {
+                formulario.append('usuario', document.getElementById('ingreso-usuario').value.trim());
+                formulario.append('clave', document.getElementById('ingreso-clave').value);
+            } else {
+                const clave = document.getElementById('registro-clave').value;
+                if (clave !== document.getElementById('registro-clave2').value) {
+                    estadoCuenta(cual, 'Las contraseñas no coinciden. Escríbelas de nuevo.', 'error');
+                    return;
+                }
+                formulario.append('nombre', document.getElementById('registro-nombre').value.trim());
+                formulario.append('usuario', document.getElementById('registro-usuario').value.trim());
+                formulario.append('clave', clave);
+            }
+            const boton = event.target.querySelector('button[type="submit"]');
+            boton.disabled = true;
+            estadoCuenta(cual, accion === 'iniciar' ? 'Verificando…' : 'Creando tu cuenta…');
+            try {
+                const respuesta = await fetch(API_CUENTAS, { method: 'POST', body: formulario, credentials: 'same-origin' });
+                const datos = await respuesta.json().catch(() => ({}));
+                if (!respuesta.ok || !datos.ok) throw new Error(datos.error || `El servidor respondió con error ${respuesta.status}.`);
+                event.target.reset();
+                estadoCuenta(cual, '');
+                await consultarSesion();
+                await cargarMedia();
+            } catch (error) {
+                estadoCuenta(cual, error.message, 'error');
+            } finally {
+                boton.disabled = false;
+            }
+        }
+
+        async function cerrarSesion() {
+            const formulario = new FormData();
+            formulario.append('accion', 'cerrar');
+            try { await fetch(API_CUENTAS, { method: 'POST', body: formulario, credentials: 'same-origin' }); } catch (e) { /* si falla la red, igual se recarga */ }
+            // Con el ingreso obligatorio, al cerrar sesión el servidor muestra la pantalla de ingreso
+            location.replace('./');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            iniciarCielo();
+            prepararIntegrantes();
+            animarConstelacion();
+            construirTelescopio();
+            prepararListaPartes();
+            activarGiroTelescopio();
+            prepararCieloProfundo();
+            prepararActividades();
+            prepararGuias();
+            generarQR();
+            consultarSesion();
+            // Algunas voces del navegador cargan tarde; se solicitan de antemano
+            if ('speechSynthesis' in window) window.speechSynthesis.getVoices();
+        });
+    </script>
+</body>
+</html>

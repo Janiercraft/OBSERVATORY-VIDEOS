@@ -1,0 +1,4 @@
+node_modules
+preparar.mjs
+.vercel
+.env*

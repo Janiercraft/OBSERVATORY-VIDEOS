@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historia del telescopio | Observatorio Estelar UNAD CIP Turbo</title>
+    <meta name="description" content="Historia del telescopio desde 1608 hasta el James Webb, y la historia del Observatorio Estelar UNAD | CIP Turbo.">
+    <link rel="icon" type="image/jpeg" href="logo.jpg">
+    <style>
+        /* Página que se abre al escanear el QR: pensada primero para celular */
+        :root { --fondo: #05060a; --panel: #121722; --borde: #25303d; --texto: #dfe3e8; --suave: #9aa4b1; --cian: #66fcf1; --oro: #e5b340; --verde: #45a29e; }
+        * { box-sizing: border-box; }
+        html { scroll-behavior: smooth; }
+        body { margin: 0; background: radial-gradient(ellipse at 50% 0%, #131a2e 0%, #05060a 60%) fixed, var(--fondo); color: var(--texto); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.6; }
+        a { color: var(--cian); }
+        .barra { position: sticky; top: 0; z-index: 10; display: flex; align-items: center; gap: 12px; padding: 12px 16px; background: rgba(18, 23, 34, 0.9); backdrop-filter: blur(6px); border-bottom: 1px solid rgba(229, 179, 64, 0.5); }
+        .barra .logo { width: 42px; height: 42px; border-radius: 50%; background: url('logo.jpg') center / 136% auto no-repeat; border: 2px solid var(--oro); flex-shrink: 0; }
+        .barra strong { font-size: 1rem; }
+        .barra a { margin-left: auto; text-decoration: none; font-size: 0.9rem; border: 1px solid var(--cian); padding: 6px 12px; border-radius: 18px; white-space: nowrap; }
+        header.portada { text-align: center; padding: 48px 16px 24px 16px; max-width: 760px; margin: 0 auto; }
+        header.portada h1 { font-size: clamp(2rem, 7vw, 3.4rem); margin: 0 0 12px 0; color: var(--cian); text-shadow: 0 0 18px rgba(102, 252, 241, 0.4); line-height: 1.1; }
+        header.portada p { color: var(--suave); margin: 0 auto; max-width: 55ch; }
+        .indice { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; margin: 22px 0 0 0; }
+        .indice a { text-decoration: none; background: var(--panel); border: 1px solid var(--borde); padding: 8px 14px; border-radius: 20px; color: var(--texto); }
+        main { max-width: 760px; margin: 0 auto; padding: 0 16px 60px 16px; }
+        h2 { font-size: 1.7rem; color: var(--oro); margin: 48px 0 8px 0; scroll-margin-top: 80px; }
+        .intro-seccion { color: var(--suave); margin: 0 0 24px 0; }
+        /* Línea de tiempo vertical: la línea une los hitos en orden cronológico */
+        .linea-tiempo { list-style: none; margin: 0; padding: 0 0 0 26px; position: relative; }
+        .linea-tiempo::before { content: ''; position: absolute; left: 8px; top: 6px; bottom: 6px; width: 2px; background: linear-gradient(var(--cian), var(--verde), var(--oro)); }
+        .hito { position: relative; background: var(--panel); border: 1px solid var(--borde); border-radius: 14px; padding: 16px 18px; margin-bottom: 16px; }
+        .hito::before { content: ''; position: absolute; left: -25px; top: 20px; width: 14px; height: 14px; border-radius: 50%; background: var(--fondo); border: 3px solid var(--cian); box-shadow: 0 0 10px rgba(102, 252, 241, 0.6); }
+        .hito.destacado { border-color: rgba(229, 179, 64, 0.6); }
+        .hito.destacado::before { border-color: var(--oro); box-shadow: 0 0 12px rgba(229, 179, 64, 0.8); }
+        .anio { display: inline-block; font-weight: bold; color: #0b0c10; background: var(--cian); border-radius: 10px; padding: 1px 10px; font-size: 0.9rem; }
+        .hito.destacado .anio { background: var(--oro); }
+        .hito h3 { margin: 8px 0 6px 0; font-size: 1.15rem; color: #fff; }
+        .hito p { margin: 0; color: var(--texto); }
+        .foto-equipo { width: 100%; border-radius: 14px; border: 2px solid var(--oro); margin: 8px 0 20px 0; display: block; }
+        .equipo-lista { list-style: none; padding: 0; margin: 10px 0 0 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+        .equipo-lista li { background: rgba(0, 0, 0, 0.25); border-radius: 8px; padding: 8px 12px; }
+        .equipo-lista span { display: block; color: var(--suave); font-size: 0.85rem; }
+        .invitacion { background: linear-gradient(135deg, rgba(102, 252, 241, 0.12), rgba(229, 179, 64, 0.12)); border: 1px solid var(--borde); border-radius: 14px; padding: 20px; margin-top: 30px; text-align: center; }
+        .invitacion a.boton { display: inline-block; margin-top: 10px; background: var(--cian); color: #0b0c10; font-weight: bold; text-decoration: none; padding: 11px 22px; border-radius: 24px; }
+        footer { text-align: center; color: var(--suave); font-size: 0.85rem; padding: 24px 16px 40px 16px; border-top: 1px solid var(--borde); }
+        @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+    </style>
+</head>
+<body>
+    <div class="barra">
+        <span class="logo" aria-hidden="true"></span>
+        <strong>Observatorio Estelar</strong>
+        <a href="./" id="volver-inicio">Ir a la página principal</a>
+    </div>
+
+    <header class="portada">
+        <h1>Historia del telescopio</h1>
+        <p>Más de 400 años de lentes y espejos que cambiaron la forma de ver el universo, y el comienzo de nuestro propio observatorio en Turbo, Antioquia.</p>
+        <nav class="indice" aria-label="Secciones">
+            <a href="#historia-general">Historia del telescopio</a>
+            <a href="#nuestra-historia">Nuestra historia</a>
+        </nav>
+    </header>
+
+    <main>
+        <h2 id="historia-general">Del primer anteojo al James Webb</h2>
+        <p class="intro-seccion">Los momentos que hicieron del telescopio la herramienta más importante de la astronomía.</p>
+        <ol class="linea-tiempo">
+            <li class="hito">
+                <span class="anio">1608</span>
+                <h3>Nace el telescopio en Holanda</h3>
+                <p>El fabricante de lentes Hans Lippershey pide una patente por un tubo con dos lentes que hacía ver cerca lo lejano. Es el primer telescopio del que hay registro escrito.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">1609</span>
+                <h3>Galileo lo apunta al cielo</h3>
+                <p>Galileo Galilei construye su propio telescopio de unos 20 aumentos. En 1610 descubre las cuatro lunas mayores de Júpiter, los cráteres de la Luna y las fases de Venus, y lo publica en su libro <em>Sidereus Nuncius</em>.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">1611</span>
+                <h3>Kepler mejora el diseño</h3>
+                <p>Johannes Kepler propone usar dos lentes convexas. La imagen sale invertida, pero el campo de visión es más amplio: es la base de los refractores astronómicos, como el nuestro.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">1668</span>
+                <h3>Newton inventa el reflector</h3>
+                <p>Isaac Newton cambia la lente principal por un espejo curvo. Así elimina los bordes de colores que producían las lentes y abre el camino a los grandes telescopios de espejo.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">1781</span>
+                <h3>Un planeta nuevo</h3>
+                <p>William Herschel, con un telescopio reflector construido por él mismo, descubre Urano: el primer planeta encontrado con telescopio.</p>
+            </li>
+            <li class="hito destacado">
+                <span class="anio">1803</span>
+                <h3>Colombia mira al cielo</h3>
+                <p>Se termina el Observatorio Astronómico de Bogotá, impulsado por José Celestino Mutis y dirigido por Francisco José de Caldas. Se le considera el primer observatorio astronómico construido en América.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">1897</span>
+                <h3>El refractor más grande</h3>
+                <p>El Observatorio Yerkes, en Estados Unidos, estrena un refractor con una lente de 102 cm. Sigue siendo el refractor más grande usado para astronomía: con lentes más grandes, el vidrio se deforma por su propio peso.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">1924</span>
+                <h3>El universo es más grande</h3>
+                <p>Con el telescopio Hooker de 2,5 metros, Edwin Hubble demuestra que la nebulosa de Andrómeda es otra galaxia. En 1929 muestra que el universo se está expandiendo.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">1990</span>
+                <h3>Un telescopio en el espacio</h3>
+                <p>El 24 de abril se lanza el Telescopio Espacial Hubble. Por encima de la atmósfera obtiene las imágenes más nítidas de la historia, como las de la Nebulosa de Orión y las Pléyades que ves en nuestra página.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">2021</span>
+                <h3>El James Webb</h3>
+                <p>El 25 de diciembre despega el Telescopio Espacial James Webb, con un espejo de 6,5 metros hecho de 18 segmentos. Observa en luz infrarroja las primeras galaxias del universo.</p>
+            </li>
+            <li class="hito destacado">
+                <span class="anio">2026</span>
+                <h3>Nace el Observatorio Estelar en Turbo</h3>
+                <p>La UNAD y el CIP Turbo fundan el Observatorio Estelar para acercar la astronomía a la comunidad de Turbo y del Urabá.</p>
+            </li>
+        </ol>
+
+        <h2 id="nuestra-historia">Nuestra historia</h2>
+        <p class="intro-seccion">Todo gran viaje comienza aquí.</p>
+        <img class="foto-equipo" src="equipo-observatorio.jpg" alt="El equipo del Observatorio Estelar UNAD | CIP Turbo" loading="lazy">
+        <ol class="linea-tiempo">
+            <li class="hito destacado">
+                <span class="anio">2026</span>
+                <h3>El comienzo</h3>
+                <p>El Observatorio Estelar nace en la UNAD y el CIP Turbo con una meta: que el telescopio apunte a las estrellas y que el conocimiento del universo llegue a toda la comunidad.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">2026</span>
+                <h3>Se forma el equipo</h3>
+                <p>El proyecto se organiza con directores, un liderazgo, desarrollo web e investigadores:</p>
+                <ul class="equipo-lista">
+                    <li>Prof. Yesid <span>Director del Proyecto</span></li>
+                    <li>Prof. Clemente <span>Director Académico</span></li>
+                    <li>Taliana <span>Líder del Observatorio</span></li>
+                    <li>Adrián <span>Creador de la Web</span></li>
+                    <li>Moisés <span>Investigador</span></li>
+                    <li>Yilessa <span>Investigadora</span></li>
+                    <li>Didier <span>Investigador</span></li>
+                </ul>
+            </li>
+            <li class="hito">
+                <span class="anio">2026</span>
+                <h3>Nuestro telescopio refractor</h3>
+                <p>El observatorio trabaja con un telescopio refractor, el mismo diseño de lentes que usaron Galileo y Kepler. Es ideal para empezar: muestra con nitidez la Luna, los planetas y las estrellas dobles.</p>
+            </li>
+            <li class="hito">
+                <span class="anio">2026</span>
+                <h3>La página web y la bitácora</h3>
+                <p>Adrián crea el sitio del observatorio, con el telescopio en 3D, la guía de armado y una bitácora donde todos los compañeros suben las fotos y videos de cada actividad.</p>
+            </li>
+        </ol>
+
+        <div class="invitacion">
+            <strong>La historia la seguimos escribiendo entre todos.</strong>
+            <p>Cada noche de observación, taller o salida de campo que subas a la bitácora es un nuevo capítulo.</p>
+            <a class="boton" href="./#bitacora" id="enlace-bitacora">Ver la bitácora</a>
+        </div>
+    </main>
+
+    <footer>
+        Observatorio Estelar · UNAD | CIP Turbo · Turbo, Antioquia · Fundado en 2026
+    </footer>
+
+    <script>
+        // Al abrir el archivo desde el PC (sin servidor), "./" no lleva a la página principal: se usa su nombre de archivo
+        if (location.protocol === 'file:') {
+            document.getElementById('volver-inicio').href = 'vista_previa_observatorio_estelar.html';
+            document.getElementById('enlace-bitacora').href = 'vista_previa_observatorio_estelar.html#bitacora';
+        }
+    </script>
+</body>
+</html>

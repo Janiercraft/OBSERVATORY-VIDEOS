@@ -1,0 +1,49 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": "",
+  "outputDirectory": "public",
+  "cleanUrls": false,
+  "rewrites": [
+    {
+      "source": "/",
+      "destination": "/api/pagina"
+    },
+    {
+      "source": "/index.php",
+      "destination": "/api/pagina"
+    },
+    {
+      "source": "/api/cuentas.php",
+      "destination": "/api/cuentas"
+    },
+    {
+      "source": "/api/bitacora.php",
+      "destination": "/api/bitacora"
+    },
+    {
+      "source": "/api/estado.php",
+      "destination": "/api/estado"
+    }
+  ],
+  "functions": {
+    "api/pagina.js": {
+      "includeFiles": "privado/**"
+    }
+  },
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    }
+  ]
+}
