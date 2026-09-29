@@ -26,11 +26,6 @@
       "destination": "/api/estado"
     }
   ],
-  "functions": {
-    "api/pagina.js": {
-      "includeFiles": "privado/**"
-    }
-  },
   "headers": [
     {
       "source": "/(.*)",
