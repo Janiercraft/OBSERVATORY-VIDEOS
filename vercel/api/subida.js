@@ -6,7 +6,7 @@
  * Así los archivos grandes no pasan por la función (que tiene límite de 4,5 MB).
  */
 
-import { handleUpload } from '@vercel/blob';
+import { handleUpload } from '@vercel/blob/client';
 import { ErrorApi, json, manejar, usuarioActual, verificarLimite } from '../lib/comun.js';
 import { LIMITES_BYTES, TIPOS_PERMITIDOS } from '../lib/reglas.js';
 

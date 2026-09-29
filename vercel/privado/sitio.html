@@ -1204,7 +1204,8 @@
             try {
                 const resultado = await upload(`bitacora/${tipo}.${extension}`, archivo, {
                     access: 'public',
-                    handleUploadUrl: 'api/subida',
+                    handleUploadUrl: '/api/subida',
+                    multipart: true,
                     clientPayload: tipo,
                     contentType: archivo.type,
                     onUploadProgress: (avance) => { barra.value = Math.round(avance.percentage); },
@@ -1215,7 +1216,10 @@
                 if (/content type|contentType/i.test(mensaje)) throw new Error('Formato no permitido. Sube imágenes JPG, PNG, WEBP o GIF, o videos MP4 o WEBM.');
                 if (/size|large|maximum/i.test(mensaje)) throw new Error(`El archivo supera el tamaño permitido (${limitesMB[tipo]} MB).`);
                 if (/401|sesión/i.test(mensaje)) { location.replace('./'); throw new Error('Tu sesión terminó.'); }
-                throw new Error('No se pudo subir el archivo. Revisa tu conexión e inténtalo de nuevo.');
+                console.error('Error real de Vercel Blob:', error);
+                if (/token|permission|access denied|forbidden|403/i.test(mensaje)) throw new Error('Vercel Blob rechazó la autorización de subida. Revisa la conexión del Blob Store con este proyecto y vuelve a desplegar.');
+                if (/failed to fetch|network|fetch/i.test(mensaje)) throw new Error('No fue posible comunicar el navegador con Vercel Blob. Revisa la consola del navegador y vuelve a intentarlo.');
+                throw new Error(`No se pudo subir el archivo${mensaje ? ': ' + mensaje : '.'}`);
             } finally {
                 barra.hidden = true;
             }
